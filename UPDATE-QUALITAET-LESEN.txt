@@ -1,0 +1,21 @@
+SL33 PERFORMANCE – QUALITÄTSUPDATE
+=================================
+Grundlage: exakt die aktuellen GitHub-Dateien auf main (3. November 2026).
+Änderungen:
+- Einzelne Ziele bearbeiten und löschen.
+- Gesamte Zieleinträge (auch archivierte Testeinträge) löschen.
+- Abgeschlossene Trainingseinträge samt Sätzen, Gewichten und Notizen löschen.
+- Geplante Zusatztrainings mit Sicherheitsabfrage entfernen.
+- Einträge im Fortschrittsverlauf löschen.
+- Coach-Tagescheck, Belastung, Empfehlungen und Chat-Nachrichten löschen.
+- Warnfarbe und Sicherheitsabfragen für Löschaktionen.
+- Aktuelles dunkelblaues Logo aus dem GitHub-Projekt beibehalten.
+- Versionsnummern für Browser-Cache aktualisiert.
+
+WICHTIG:
+Vor dem Einspielen in der App unter Cloud > Daten exportieren sichern.
+Löschen ist endgültig und wird bei aktiver Cloud-Synchronisierung übertragen.
+Wenn du auf mehreren Geräten arbeitest, erst Cloud-Daten abgleichen, sonst kann
+ein älterer Gerätestand neue Änderungen wieder überschreiben.
+Das Update verändert weder die Firebase-Regeln noch die Anmeldeverwaltung.
+Es ist ein Code-/Syntax- und Logik-Update, kein vollständiger Live-Firebase-Test.

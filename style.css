@@ -89,3 +89,7 @@ input:disabled,textarea:disabled,button:disabled{opacity:.65;cursor:not-allowed}
 
 /* Smart Coach */
 .coach-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:16px;margin:16px 0}.coach-fields label{display:flex;flex-direction:column;gap:7px;color:var(--text);font-size:13px}.coach-fields output{font-weight:700;color:#8cb9ff}.coach-fields input{width:100%;accent-color:#669cff}.coach-score{font-size:48px;font-weight:850;letter-spacing:-.05em;color:#7eb3ff}.coach-suggestion,.coach-chat{border:1px solid var(--edge);border-radius:12px;padding:13px;margin-top:12px;background:#101b2c}.coach-suggestion p{line-height:1.5}.coach-chat p{margin:6px 0;line-height:1.5}.tabs button{min-width:0;flex:1;font-size:11px}.coach-fields input[type=range]{background:transparent}#coach textarea{width:100%;margin:8px 0 12px}#coach .rowwrap input[type=number]{max-width:145px}
+
+/* Qualitätssicherung: destructive actions stay visually distinct. */
+.danger-btn { border-color: #bd5264 !important; color: #ffb9c3 !important; }
+.danger-btn:hover { background: rgba(189,82,100,.14) !important; }
