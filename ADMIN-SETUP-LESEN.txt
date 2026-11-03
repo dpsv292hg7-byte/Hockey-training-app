@@ -1,0 +1,13 @@
+SL33 PERFORMANCE – ADMIN-BENUTZERVERWALTUNG V4
+
+1. VORHER: Trainingsdaten in der App exportieren.
+2. ZIP entpacken und Dateien auf GitHub branch main hochladen. Die Sicherheitsregeln sind NICHT durch GitHub automatisch aktiv.
+3. Firebase Console > Firestore Database > Regeln öffnen. Den KOMPLETTEN Inhalt von firestore.rules.txt einsetzen und VERÖFFENTLICHEN.
+4. In der App als Administrator anmelden, Cloud öffnen, «Benutzer aktualisieren» drücken.
+5. Zugriffsperre mit Testkonto prüfen. Die App blendet bei der Sperre ihre Oberfläche aus und Firestore blockiert Datenzugriff.
+
+ONLINE: Kein präziser Live-Status. Ein sichtbarer Tab sendet alle 60 Sekunden einen Zeitstempel. 150 Sekunden ohne frischen Ping = offline/unbekannt. Offline-Meldung bei Tabwechsel ist best effort; abruptes Schliessen kann sie verhindern.
+
+WICHTIG: Diese Funktion sperrt Firestore-Zugriff, löscht NICHT das Firebase-Auth-Konto oder Daten, und kann bereits lokal heruntergeladene Daten nicht von einem fremden Gerät zurückholen.
+
+Bei Regeln-Fehler zuerst die Regeln in Firebase kontrollieren. Niemals pauschal allow read,write:true setzen.

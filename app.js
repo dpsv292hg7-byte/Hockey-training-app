@@ -138,6 +138,7 @@ function importData(ev){const file=ev.target.files?.[0];if(!file)return;file.tex
 const ADMIN_UID='LQzUxoUnkhVIR7gFrT74AHmNO4t2';
 const FIREBASE_CONFIG={apiKey:'AIzaSyDrWe116T7CCzBYw4YjyGtGdsZFDRPzVzw',authDomain:'sl33-performance.firebaseapp.com',projectId:'sl33-performance',storageBucket:'sl33-performance.firebasestorage.app',messagingSenderId:'443932352448',appId:'1:443932352448:web:8e739a9885fdc94ef6f225'};
 let isApproved=false,cloudReady=false,cloudSaving=false,cloudWritesEnabled=false,cloudTimer=null,cloudUnsubscribe=null;
+let presenceTimer=null,adminUsersUnsubscribe=null;
 function loadScript(url){return new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=url;s.onload=resolve;s.onerror=reject;document.head.appendChild(s)})}
 function setAuthMessage(message){const el=$('loginMessage');if(el)el.textContent=message}
 function showGate(view){$('loginGate').classList.toggle('hidden',view==='app');$('pendingGate').classList.toggle('hidden',view!=='pending');document.querySelector('main').classList.toggle('hidden',view!=='app');document.querySelector('header').classList.toggle('hidden',view!=='app');document.querySelector('nav.tabs').classList.toggle('hidden',view!=='app');}
@@ -147,6 +148,7 @@ async function connectFirebase(){try{
   if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);fb=firebase;cloudReady=true;
   fb.auth().onAuthStateChanged(async user=>{
     if(cloudUnsubscribe){cloudUnsubscribe();cloudUnsubscribe=null}
+    stopPresence();if(adminUsersUnsubscribe){adminUsersUnsubscribe();adminUsersUnsubscribe=null}
     fbUser=user;isApproved=false;cloudWritesEnabled=false;
     if(!user){showGate('login');setAuthMessage('Melde dich an oder beantrage ein Konto.');return}
     if(user.uid===ADMIN_UID){await allowAccess();return}
@@ -154,13 +156,13 @@ async function connectFirebase(){try{
     cloudUnsubscribe=fb.firestore().collection('approvals').doc(user.uid).onSnapshot(async snap=>{
       if(!fbUser||fbUser.uid!==user.uid)return;
       if(snap.exists&&snap.data().approved===true){if(!isApproved)await allowAccess()}
-      else{isApproved=false;showGate('pending');$('pendingStatus').textContent=snap.exists&&snap.data().approved===false?'Dein Antrag wurde abgelehnt.':'Dein Antrag wartet auf die Freigabe des Administrators.'}
+      else{isApproved=false;cloudWritesEnabled=false;clearTimeout(cloudTimer);stopPresence();showGate('pending');$('pendingStatus').textContent=snap.exists&&snap.data().approved===false?'Dein Antrag wurde abgelehnt.':'Dein Antrag wartet auf die Freigabe des Administrators.'}
     },e=>{$('pendingStatus').textContent='Freigabestatus nicht abrufbar: '+e.message});
   });
 }catch(e){setAuthMessage('Firebase-Verbindung fehlgeschlagen: '+e.message);showGate('login')}}
 async function allowAccess(){
   isApproved=true;showGate('app');$('cloudStatus').textContent='Angemeldet: '+(fbUser.email||'');
-  await loadCloudOnce();if(fbUser.uid===ADMIN_UID)loadRequests();
+  await loadCloudOnce();startPresence();if(fbUser.uid===ADMIN_UID){loadRequests();watchAdminUsers()}
 }
 async function loadCloudOnce(){
  try{const snap=await fb.firestore().collection('users').doc(fbUser.uid).get();
@@ -173,7 +175,7 @@ async function loadCloudOnce(){
 }
 async function authAction(action){
  if(!fb)return;try{
-  if(action==='logout'){await fb.auth().signOut();return}
+  if(action==='logout'){await markOffline();await fb.auth().signOut();return}
   const email=$('authEmail').value.trim(),pass=$('authPassword').value;
   if(!email||!pass)throw Error('Bitte E-Mail und Passwort eingeben.');
   if(action==='register'){
@@ -194,7 +196,48 @@ async function loadRequests(){
 async function reviewRequest(uid,approve){
  if(!fbUser||fbUser.uid!==ADMIN_UID)return;
  if(!confirm(approve?'Dieses Konto freischalten?':'Diese Anfrage ablehnen?'))return;
- try{const batch=fb.firestore().batch();batch.set(fb.firestore().collection('approvals').doc(uid),{approved:approve,reviewedAt:fb.firestore.FieldValue.serverTimestamp(),reviewedBy:fbUser.uid});batch.update(fb.firestore().collection('requests').doc(uid),{status:approve?'approved':'rejected'});await batch.commit();await loadRequests()}catch(e){alert('Freigabe fehlgeschlagen: '+e.message)}
+ try{const batch=fb.firestore().batch();batch.set(fb.firestore().collection('approvals').doc(uid),{approved:approve,reviewedAt:fb.firestore.FieldValue.serverTimestamp(),reviewedBy:fbUser.uid});batch.update(fb.firestore().collection('requests').doc(uid),{status:approve?'approved':'rejected'});await batch.commit();await loadRequests();await loadAdminUsers()}catch(e){alert('Freigabe fehlgeschlagen: '+e.message)}
+}
+// Admin directory and approximate presence; status is NOT Firebase Authentication deletion.
+function stopPresence(){if(presenceTimer){clearInterval(presenceTimer);presenceTimer=null}}
+async function presencePing(online=true){
+ if(!fb||!fbUser||!isApproved)return;
+ try{await fb.firestore().collection('presence').doc(fbUser.uid).set({email:fbUser.email||'',lastSeen:fb.firestore.FieldValue.serverTimestamp(),online:!!online},{merge:true})}catch(e){console.warn('Presence unavailable',e.message)}
+}
+function startPresence(){stopPresence();presencePing(true);presenceTimer=setInterval(()=>{if(document.visibilityState==='visible')presencePing(true)},60000)}
+async function markOffline(){stopPresence();await presencePing(false)}
+document.addEventListener('visibilitychange',()=>{if(fbUser&&isApproved)presencePing(document.visibilityState==='visible')});
+function adminOnly(){return !!fbUser&&fbUser.uid===ADMIN_UID}
+function watchAdminUsers(){if(!adminOnly())return;loadAdminUsers();if(adminUsersUnsubscribe)adminUsersUnsubscribe();adminUsersUnsubscribe=fb.firestore().collection('presence').onSnapshot(()=>loadAdminUsers(),e=>console.warn('Admin presence',e.message))}
+async function loadAdminUsers(){
+ if(!adminOnly())return;
+ const el=$('adminUsersList');if(!el)return;
+ try{
+  const [requests,approvals,presence]=await Promise.all(['requests','approvals','presence'].map(c=>fb.firestore().collection(c).get()));
+  const people=new Map();
+  for(const d of requests.docs)people.set(d.id,{uid:d.id,email:d.data().email||'',request:d.data().status||'pending'});
+  for(const d of approvals.docs){const x=people.get(d.id)||{uid:d.id,email:'',request:'unknown'};x.approved=d.data().approved===true;people.set(d.id,x)}
+  for(const d of presence.docs){const x=people.get(d.id)||{uid:d.id,email:'',request:'unknown'};x.email=x.email||d.data().email||'';x.lastSeen=d.data().lastSeen?.toDate?.()||null;x.onlineFlag=d.data().online===true;people.set(d.id,x)}
+  people.delete(ADMIN_UID);
+  const rows=[...people.values()].sort((a,b)=>(a.email||a.uid).localeCompare(b.email||b.uid));
+  el.innerHTML=rows.length?rows.map(x=>{
+   const fresh=x.lastSeen&&Date.now()-x.lastSeen.getTime()<150000;
+   const online=x.approved&&x.onlineFlag&&fresh;
+   const last=x.lastSeen?x.lastSeen.toLocaleString('de-CH'):'Noch keine Aktivität erfasst';
+   const status=x.approved?'Zugriff erlaubt':x.approved===false?'Zugriff gesperrt':'Nicht freigeschaltet';
+   return `<div class="request-entry"><div><strong>${safe(x.email||'Unbekannte E-Mail')}</strong><div class="mini">${online?'🟢 Kürzlich aktiv':'⚪ Offline / unbekannt'} · ${safe(status)}</div><div class="mini">Zuletzt gesehen: ${safe(last)}</div></div><div class="rowwrap">${x.approved?`<button class="btn alt danger-btn" onclick="changeUserAccess('${x.uid}',false)">Zugriff entziehen</button>`:`<button class="btn" onclick="changeUserAccess('${x.uid}',true)">Zugriff erlauben</button>`}</div></div>`
+  }).join(''):'<p class="mini">Noch keine Benutzer vorhanden.</p>';
+ }catch(e){el.textContent='Benutzer konnten nicht geladen werden: '+e.message}
+}
+async function changeUserAccess(uid,allow){
+ if(!adminOnly()||uid===ADMIN_UID)return;
+ if(!confirm(allow?'Diesem Benutzer den Zugriff erlauben?':'Zugriff sperren? Das Konto und seine Trainingsdaten bleiben erhalten.'))return;
+ try{
+  const ref=fb.firestore().collection('approvals').doc(uid);
+  await ref.set({approved:allow,reviewedAt:fb.firestore.FieldValue.serverTimestamp(),reviewedBy:fbUser.uid},{merge:true});
+  const req=fb.firestore().collection('requests').doc(uid);const snap=await req.get();if(snap.exists)await req.update({status:allow?'approved':'revoked'});
+  await loadRequests();await loadAdminUsers();
+ }catch(e){alert('Zugriff konnte nicht geändert werden: '+e.message)}
 }
 function queueSync(){if(!isApproved||!cloudWritesEnabled)return;clearTimeout(cloudTimer);cloudTimer=setTimeout(syncCloud,1800)}
 async function syncCloud(){if(!fb||!fbUser||!isApproved||!cloudWritesEnabled||cloudSaving)return;cloudSaving=true;try{

@@ -20,6 +20,15 @@ service cloud.firestore {
       allow read: if admin() || (signedIn() && request.auth.uid == uid);
       allow create, update, delete: if admin();
     }
+    match /presence/{uid} {
+      allow read: if admin() || (approved() && request.auth.uid == uid);
+      allow create, update: if approved() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['email','lastSeen','online'])
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.online is bool
+        && request.resource.data.lastSeen == request.time;
+      allow delete: if admin();
+    }
     match /users/{uid} {
       allow read, write: if approved() && (admin() || request.auth.uid == uid);
     }
