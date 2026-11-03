@@ -76,3 +76,13 @@ header{background:linear-gradient(120deg,#11284b,#101d28 80%)}
 .rest-countdown{border:1px solid #3b79c7;border-radius:12px;background:#132d4c;color:#b7dcff;font-size:18px;font-weight:800;padding:11px 13px;margin:9px 0}
 .rest-countdown[hidden]{display:none}.request-entry{padding:14px 0;border-top:1px solid var(--edge);overflow-wrap:anywhere}
 .request-entry .rowwrap{margin-top:8px}
+
+/* SL33 diary lifecycle and archive states */
+.archive-notice{border:1px solid #416a9c;background:rgba(40,82,135,.17);border-radius:14px;padding:15px;margin:12px 0;color:var(--text);line-height:1.65}
+.archive-notice .btn{margin:8px 0 0;display:block}
+.day-goal{display:block;font-size:13px;font-style:normal;margin-top:3px}
+.calendar-goal-summary{padding:8px 0}
+#goalActions{gap:12px}#goalActions .btn{min-height:44px}
+input:disabled,textarea:disabled,button:disabled{opacity:.65;cursor:not-allowed}
+#goalHistory .goal-entry{margin-bottom:10px}
+[hidden]{display:none!important}

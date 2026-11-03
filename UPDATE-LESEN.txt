@@ -1,0 +1,21 @@
+SL33 PERFORMANCE – Tagebuch-Update 2026-11-03
+
+WICHTIG: Vor dem Hochladen in der laufenden App unter Cloud > Daten exportieren
+unbedingt eine JSON-Sicherung anlegen.
+
+Enthalten:
+- Ziele setzen, explizit speichern, nach der Einheit auswerten und Tag abschliessen.
+- Abgeschlossene Ziele sind schreibgeschuetzt im Archiv und im Kalender auffindbar.
+- Neue Tage erhalten eigene leere Ziele, alte Eintraege bleiben bestehen.
+- Trainingsabschluesse werden im Kalender gespeichert; abgeschlossene Sessions sind
+  gesperrt, koennen aber bewusst zur Bearbeitung wieder geoeffnet werden.
+- Gewichtshistorie, Pausentimer, Firebase Login, Adminfreigabe und bestehende
+  Trainingsplaene bleiben erhalten.
+- Cloud-Abgleich schuetzt bei der ersten Anmeldung besser vor versehentlichem
+  Ueberschreiben. WICHTIG: Kein Echtzeit-Merge bei gleichzeitiger Nutzung mehrerer
+  Geraete. Vor Geraetewechsel zuerst Cloud-Sicherung abschliessen und am anderen
+  Geraet neu laden. Automatische E-Mail-Benachrichtigung nicht enthalten.
+
+GitHub: Einzelne App-Dateien in das Stammverzeichnis des Repositories hochladen
+und gleichnamige Dateien ersetzen. ZIP nicht als einzelne Datei hochladen.
+Die Firestore-Regeln muessen NICHT erneut geaendert werden.
