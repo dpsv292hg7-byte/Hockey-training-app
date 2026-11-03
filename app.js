@@ -2,11 +2,11 @@
 const foam='1 Runde · Waden 15s/Seite; Schienbein 15s/Seite; Hamstrings, Gesäss, Quadrizeps, Adduktoren und IT-Band je 20s/Seite; BWS rollen 30s; BWS-Extension 30s; Nackenrotation 5/Seite.';
 const prep1='1 Runde · MB Glute Bridge 8 (5s halten); Banded Hip Flexor Drive 10/Seite; Standing Y/T/W Raises 8/8/8; Side Plank Abduction 8/Seite; Scap Pull-up 10.';
 const prep2='1 Runde · SL Glute Bridge 8/Seite; Standing Banded Hip Flexor Drive 10/Seite; Prone Swimmers 8; Side Plank Abduction & Adduction 8/Seite; Scap Pull-up 10.';
-const sprintPrep='1 Runde · Oscillating Lunge Jump with Switch 10/Seite; MB Pogo Jump 12; MB Split Stance Pogo Jump 8/Seite; A-Skip 5/Seite; High Knees 15 Yards. Pausen nach Bedarf.';
+const sprintPrep='1 Runde · Oscillating Lunge Jump with Switch 10/Seite; MB Pogo Jump 12; MB Split Stance Pogo Jump 8/Seite; A-Skip 5/Seite; High Knees 15 m. Pausen nach Bedarf.';
 const ex=(id,name,sets,reps,desc='',kind='Kraft')=>({id,name,sets,reps,desc,kind});
 const plans=[
-{id:'s1',name:'Session 1',focus:'Full Body Strength, Power & Speed',blocks:[{name:'A · Warm-up',items:[ex('foam1','Foam Roller Circuit',1,'1 Runde',foam,'Mobilität'),ex('mob1','Full Body Mobility Prep 1',1,'1 Runde',prep1,'Mobilität'),ex('sprintprep','Sprint Prep Circuit',1,'1 Runde',sprintPrep,'Sprint')]},{name:'B · Speed & Plyometrics',items:[ex('depth','Split Stance Depth Drop',3,'3 / Seite','Von der Box steigen und weich im Ausfallschritt landen.','Explosivität'),ex('sprint10','10 Yard Sprint',4,'10 Yards','Maximale Beschleunigung, Startposition variieren.','Sprint')]}]},
-{id:'s2',name:'Session 2',focus:'Full Body Strength, Power & Explosiveness',blocks:[{name:'A · Warm-up',items:[ex('foam2','Foam Roller Circuit',1,'1 Runde',foam,'Mobilität'),ex('mob2','Full Body Mobility Prep 2',1,'1 Runde',prep2,'Mobilität')]},{name:'B · Explosivität',items:[ex('mbslam','MB Slam',2,'4','Medizinball über Kopf heben und explosiv auf den Boden werfen.','Explosivität'),ex('plyopush','Band Accelerated Plyometric Pushup',2,'4','Band am Rack befestigen, um den Brustkorb legen und explosiv hochdrücken.','Explosivität'),ex('around','Around the World MB Slam',2,'4','Medizinball um den Kopf kreisen und explosiv auf den Boden werfen.','Explosivität')]},{name:'C · Kraft',items:[ex('landmine','SA Landmine Press',3,'6–8 / Seite','Einarmig von Schulterhöhe schräg nach vorne oben drücken. RPE 8–10, 0–2 Wiederholungen Reserve.'),ex('split','DB RFE Split Squat',3,'6–8 / Seite','Hinteren Fuss auf Bank, vorderes Bein kontrolliert beugen. RPE 8–10, 0–2 Wiederholungen Reserve.'),ex('bird','Bird Dog Row',3,'6–8 / Seite','Hand und Knie auf Bank, anderes Bein strecken und Kurzhantel rudern. RPE 8–10.'),ex('ham','SL BOSU Hamstring Curls',2,'8–10 / Seite','Eine Ferse auf Ball, Hüfte anheben und Ferse zu dir ziehen.'),ex('pallof','Pallof Press with Overhead Reach',2,'10 / Seite','Seitlich zum Band/Kabel stehen, Hände vor und über Kopf führen, Rotation widerstehen. Mindestens zwei Sätze sichtbar.') ]},{name:'D · Zusatz & Kondition',items:[ex('pinch','Plate Pinch Carry',2,'20 Yards','Gewichtsscheibe mit Fingern greifen, aufrecht gehen.','Griffkraft'),ex('rollups','Kettlebell Rollups',2,'2','Arme gestreckt, kontrolliert auf- und abrollen.','Core'),ex('bikeana','Anaerobic Capacity Bike Intervals',5,'30s hart / 90s locker','3 Minuten aufwärmen, 5 Intervalle, danach 2 Minuten locker ausfahren.','Kondition')]}]},
+{id:'s1',name:'Session 1',focus:'Full Body Strength, Power & Speed',blocks:[{name:'A · Warm-up',items:[ex('foam1','Foam Roller Circuit',1,'1 Runde',foam,'Mobilität'),ex('mob1','Full Body Mobility Prep 1',1,'1 Runde',prep1,'Mobilität'),ex('sprintprep','Sprint Prep Circuit',1,'1 Runde',sprintPrep,'Sprint')]},{name:'B · Speed & Plyometrics',items:[ex('depth','Split Stance Depth Drop',3,'3 / Seite','Von der Box steigen und weich im Ausfallschritt landen.','Explosivität'),ex('sprint10','10 m Sprint',4,'10 m','Maximale Beschleunigung, Startposition variieren.','Sprint')]}]},
+{id:'s2',name:'Session 2',focus:'Full Body Strength, Power & Explosiveness',blocks:[{name:'A · Warm-up',items:[ex('foam2','Foam Roller Circuit',1,'1 Runde',foam,'Mobilität'),ex('mob2','Full Body Mobility Prep 2',1,'1 Runde',prep2,'Mobilität')]},{name:'B · Explosivität',items:[ex('mbslam','MB Slam',2,'4','Medizinball über Kopf heben und explosiv auf den Boden werfen.','Explosivität'),ex('plyopush','Band Accelerated Plyometric Pushup',2,'4','Band am Rack befestigen, um den Brustkorb legen und explosiv hochdrücken.','Explosivität'),ex('around','Around the World MB Slam',2,'4','Medizinball um den Kopf kreisen und explosiv auf den Boden werfen.','Explosivität')]},{name:'C · Kraft',items:[ex('landmine','SA Landmine Press',3,'6–8 / Seite','Einarmig von Schulterhöhe schräg nach vorne oben drücken. RPE 8–10, 0–2 Wiederholungen Reserve.'),ex('split','DB RFE Split Squat',3,'6–8 / Seite','Hinteren Fuss auf Bank, vorderes Bein kontrolliert beugen. RPE 8–10, 0–2 Wiederholungen Reserve.'),ex('bird','Bird Dog Row',3,'6–8 / Seite','Hand und Knie auf Bank, anderes Bein strecken und Kurzhantel rudern. RPE 8–10.'),ex('ham','SL BOSU Hamstring Curls',2,'8–10 / Seite','Eine Ferse auf Ball, Hüfte anheben und Ferse zu dir ziehen.'),ex('pallof','Pallof Press with Overhead Reach',2,'10 / Seite','Seitlich zum Band/Kabel stehen, Hände vor und über Kopf führen, Rotation widerstehen. Mindestens zwei Sätze sichtbar.') ]},{name:'D · Zusatz & Kondition',items:[ex('pinch','Plate Pinch Carry',2,'20 m','Gewichtsscheibe mit Fingern greifen, aufrecht gehen.','Griffkraft'),ex('rollups','Kettlebell Rollups',2,'2','Arme gestreckt, kontrolliert auf- und abrollen.','Core'),ex('bikeana','Anaerobic Capacity Bike Intervals',5,'30s hart / 90s locker','3 Minuten aufwärmen, 5 Intervalle, danach 2 Minuten locker ausfahren.','Kondition')]}]},
 {id:'s3',name:'Session 3',focus:'Full Body Strength, Power & Agility',blocks:[{name:'A · Vorbereitung',items:[ex('foam3','Foam Roller Circuit',1,'1 Runde',foam,'Mobilität')]},{name:'B · Power & Kraft',items:[ex('stepjump','Step-up Jump',2,'4 / Seite','Explosiver Sprung auf/aus dem Step-up. Mindestens zwei Sätze sichtbar.','Explosivität'),ex('bandsquat','Banded Box Squat',1,'Sätze offen','Schweres Gewicht; aus der Box explosiv aufstehen. Satz- und Wiederholungszahl im Screenshot nicht lesbar.'),ex('incline','Single-arm DB Incline Bench Press',1,'Wdh. offen','Einarmiges Schrägbankdrücken, RPE 8–10. Satz- und Wiederholungszahl nicht sicher lesbar.'),ex('bstance','DB B-stance Romanian Deadlift',2,'6–8 / Seite','Einbeinbetonte Hüftbeuge, RPE 8–10.') ]},{name:'C · Core & Assistenz',items:[ex('plankdrag','Kettlebell Plank Drag',3,'8–10 / Seite','Kettlebell im Plank unter dem Körper durchziehen.'),ex('traises','Incline T Raises',2,'15–20','Brust auf Schrägbank, Arme in T-Form anheben.'),ex('hanging','Hanging Leg Raises',2,'8–12','Kontrolliertes Beinheben im Hang.'),ex('soleus','Single Leg Soleus Raise Iso Hold',2,'30s / Seite','Knie gebeugt, Ferse anheben und halten.') ]},{name:'D · Kondition',items:[ex('bikerepeat','Repeat Sprint Ability Bike Intervals',2,'6 Intervalle','3 Min Warm-up; Satz 1: 6×8s maximal/22s locker; 3 Min locker; Satz 2: 6×10s maximal/20s locker; 3 Min locker.','Kondition')]}]}
 ];
 const STORE='sl33-training-v3';let db;try{db=JSON.parse(localStorage.getItem(STORE))||{}}catch{db={}};db.logs ||= {};db.videos ||= {};db.completed ||= {};db.planned ||= {};let activePlan='s1',activeTab='home',month=new Date(),timerEnd=0,timerLeft=90,timerId=null,fb=null,fbUser=null,syncing=false;
@@ -27,6 +27,28 @@ function exerciseMode(item){
  return 'weighted';
 }
 function modeLabel(mode){return ({circuit:'Routine',interval:'Intervalle',hold:'Haltezeit',bodyweight:'Ohne Zusatzgewicht',equipment:'Geräteübung',weighted:'Krafttraining'})[mode]}
+function exerciseHistory(id,beforeDate='9999-12-31'){
+ return Object.values(db.logs).filter(l=>l.date&&l.date<beforeDate)
+  .flatMap(l=>Object.entries(l.sets||{}).filter(([key,s])=>key.startsWith(id+'-')&&s.kg!==undefined&&s.kg!==''&&Number.isFinite(Number(s.kg))&&Number(s.kg)>=0)
+    .map(([key,s])=>({date:l.date,kg:Number(s.kg),reps:s.reps||'',set:Number(key.slice(id.length+1))+1,done:!!s.done})))
+  .sort((a,b)=>b.date.localeCompare(a.date)||a.set-b.set);
+}
+function previousSet(id,index,date){
+ const logs=Object.values(db.logs).filter(l=>l.date&&l.date<date&&l.sets&&Object.keys(l.sets).some(k=>k.startsWith(id+'-')))
+  .sort((a,b)=>b.date.localeCompare(a.date));
+ for(const l of logs){const same=l.sets[id+'-'+index];if(same&&same.kg!==undefined&&same.kg!=='')return {kg:same.kg,date:l.date};
+  const other=Object.entries(l.sets).find(([k,s])=>k.startsWith(id+'-')&&s.kg!==undefined&&s.kg!=='');
+  if(other)return {kg:other[1].kg,date:l.date};
+ }
+ return null;
+}
+function toggleExerciseHistory(id){
+ const el=document.getElementById('history-'+id);if(!el)return;
+ if(!el.hidden){el.hidden=true;return}
+ const entries=exerciseHistory(id).slice(0,40);
+ el.innerHTML=entries.length?`<div class="history-title">Gewichtsverlauf · neueste zuerst</div><div class="history-scroll"><table class="history-table"><thead><tr><th>Datum</th><th>Satz</th><th>Gewicht</th><th>Wdh.</th></tr></thead><tbody>${entries.map(e=>`<tr><td>${safe(e.date)}</td><td>${e.set}</td><td><strong>${safe(e.kg)} kg</strong></td><td>${safe(e.reps||'–')}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Noch keine Gewichte gespeichert. Nach deinem ersten Training erscheint hier dein Verlauf.</p>';
+ el.hidden=false;
+}
 function renderWorkout(){
  const p=plans.find(x=>x.id===activePlan),log=getLog();
  $('workoutTitle').textContent=p.name;$('workoutFocus').textContent=p.focus;$('workoutNotes').value=log.notes||'';
@@ -37,6 +59,7 @@ function renderWorkout(){
      const key=item.id,mode=exerciseMode(item),one=mode==='circuit',units=one?1:item.sets;
      const prescription=one?'1 Runde · einmal vollständig durchführen':mode==='interval'?item.reps+' · Details in Anleitung':mode==='hold'?item.sets+' × '+item.reps:item.sets+' Sätze × '+item.reps;
      html+=`<div class="item"><div class="flex"><h3>${safe(item.name)}</h3><span class="pill">${safe(modeLabel(mode))}</span></div><div class="sub" style="margin:6px 0 10px">${safe(prescription)}</div>`;
+     if(mode==='weighted')html+=`<button type="button" class="history-toggle" onclick="toggleExerciseHistory('${key}')">↗ Gewichtsverlauf ansehen</button><div id="history-${key}" class="exercise-history" hidden></div>`;
      if(one){
        const steps=item.desc.split(';').map(x=>x.trim()).filter(Boolean);
        html+=`<details><summary>Alle Übungen der Routine ansehen (${steps.length})</summary><ol class="sub" style="padding-left:20px">${steps.map(step=>`<li style="padding:4px 0">${safe(step)}</li>`).join('')}</ol></details>`;
@@ -48,7 +71,11 @@ function renderWorkout(){
        total++;const entry=log.sets[key+'-'+i]||{};if(entry.done)done++;
        const buttonText=entry.done?'✓':'✓';
        html+=`<div class="set-card ${entry.done?'is-done':''}"><div class="set-card-title"><span class="set-number">${one?'Routine':mode==='interval'?'Block':'Satz'} ${i+1}</span><button aria-label="${one?'Routine':mode==='interval'?'Intervallblock':'Satz'} ${i+1} ${entry.done?'als offen markieren':'abhaken'}" aria-pressed="${entry.done?'true':'false'}" class="check ${entry.done?'yes':''}" onclick="toggleSet('${key}',${i})">${buttonText}</button></div><div class="set-inputs">`;
-       if(mode==='weighted')html+=`<label>Gewicht (kg) <input aria-label="Gewicht Satz ${i+1}" type="number" min="0" step="0.5" value="${safe(entry.kg??'')}" onchange="setField('${key}',${i},'kg',this.value)"></label>`;
+       if(mode==='weighted'){
+         const prev=previousSet(key,i,log.date),shown=entry.kg??prev?.kg??'';
+         html+=`<label>Gewicht (kg) <input aria-label="Gewicht Satz ${i+1}" type="number" min="0" step="0.5" value="${safe(shown)}" oninput="setField('${key}',${i},'kg',this.value)"></label>`;
+         if(entry.kg===undefined&&prev)html+=`<div class="last-weight">Zuletzt: ${safe(prev.kg)} kg · ${safe(prev.date)}</div>`;
+       }
        if(['weighted','equipment','bodyweight'].includes(mode))html+=`<label>Wdh. <input aria-label="Wiederholungen Satz ${i+1}" type="text" style="width:86px" value="${safe(entry.reps??'')}" placeholder="${safe(item.reps)}" onchange="setField('${key}',${i},'reps',this.value)"></label>`;
        html+='</div></div>';
      }
@@ -61,7 +88,7 @@ function renderWorkout(){
  }
  $('workoutItems').innerHTML=html;$('workoutPercent').textContent=total?Math.round(done/total*100)+'%':'';$('workoutBar').style.width=(total?done/total*100:0)+'%';
 }
-function toggleSet(key,i){let e=getLog().sets[key+'-'+i] ||= {};e.done=!e.done;const l=getLog();if(!e.done)l.finished=false;save();renderWorkout()}
+function toggleSet(key,i){const l=getLog(),e=l.sets[key+'-'+i] ||= {};if(!e.done&&e.kg===undefined){const prev=previousSet(key,i,l.date);if(prev)e.kg=prev.kg}e.done=!e.done;if(!e.done)l.finished=false;save();renderWorkout()}
 function setField(key,i,field,value){let e=getLog().sets[key+'-'+i] ||= {};e[field]=value;save()}
 function saveNotes(){getLog().notes=$('workoutNotes').value;save()}
 function finishWorkout(){let l=getLog();const p=plans.find(x=>x.id===activePlan),total=p.blocks.flatMap(b=>b.items).reduce((n,e)=>n+(exerciseMode(e)==='circuit'?1:e.sets),0),done=Object.values(l.sets).filter(s=>s.done).length;if(done<total&&!confirm(`${done} von ${total} Sätzen erledigt. Training trotzdem abschliessen?`))return;l.finished=true;save();navigate('stats')}
