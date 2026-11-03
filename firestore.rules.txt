@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function admin() { return signedIn() && request.auth.uid == 'LQzUxoUnkhVIR7gFrT74AHmNO4t2'; }
+    function approved() {
+      return admin() || (signedIn()
+        && exists(/databases/$(database)/documents/approvals/$(request.auth.uid))
+        && get(/databases/$(database)/documents/approvals/$(request.auth.uid)).data.approved == true);
+    }
+    match /requests/{uid} {
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['email','createdAt','status'])
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.status == 'pending';
+      allow read: if admin() || (signedIn() && request.auth.uid == uid);
+      allow update, delete: if admin();
+    }
+    match /approvals/{uid} {
+      allow read: if admin() || (signedIn() && request.auth.uid == uid);
+      allow create, update, delete: if admin();
+    }
+    match /users/{uid} {
+      allow read, write: if approved() && (admin() || request.auth.uid == uid);
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

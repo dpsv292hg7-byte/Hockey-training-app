@@ -9,7 +9,7 @@ const plans=[
 {id:'s2',name:'Session 2',focus:'Full Body Strength, Power & Explosiveness',blocks:[{name:'A · Warm-up',items:[ex('foam2','Foam Roller Circuit',1,'1 Runde',foam,'Mobilität'),ex('mob2','Full Body Mobility Prep 2',1,'1 Runde',prep2,'Mobilität')]},{name:'B · Explosivität',items:[ex('mbslam','MB Slam',2,'4','Medizinball über Kopf heben und explosiv auf den Boden werfen.','Explosivität'),ex('plyopush','Band Accelerated Plyometric Pushup',2,'4','Band am Rack befestigen, um den Brustkorb legen und explosiv hochdrücken.','Explosivität'),ex('around','Around the World MB Slam',2,'4','Medizinball um den Kopf kreisen und explosiv auf den Boden werfen.','Explosivität')]},{name:'C · Kraft',items:[ex('landmine','SA Landmine Press',3,'6–8 / Seite','Einarmig von Schulterhöhe schräg nach vorne oben drücken. RPE 8–10, 0–2 Wiederholungen Reserve.'),ex('split','DB RFE Split Squat',3,'6–8 / Seite','Hinteren Fuss auf Bank, vorderes Bein kontrolliert beugen. RPE 8–10, 0–2 Wiederholungen Reserve.'),ex('bird','Bird Dog Row',3,'6–8 / Seite','Hand und Knie auf Bank, anderes Bein strecken und Kurzhantel rudern. RPE 8–10.'),ex('ham','SL BOSU Hamstring Curls',2,'8–10 / Seite','Eine Ferse auf Ball, Hüfte anheben und Ferse zu dir ziehen.'),ex('pallof','Pallof Press with Overhead Reach',2,'10 / Seite','Seitlich zum Band/Kabel stehen, Hände vor und über Kopf führen, Rotation widerstehen. Mindestens zwei Sätze sichtbar.') ]},{name:'D · Zusatz & Kondition',items:[ex('pinch','Plate Pinch Carry',2,'18 m','Gewichtsscheibe mit Fingern greifen, aufrecht gehen.','Griffkraft'),ex('rollups','Kettlebell Rollups',2,'2','Arme gestreckt, kontrolliert auf- und abrollen.','Core'),ex('bikeana','Anaerobic Capacity Bike Intervals',5,'30s hart / 90s locker','3 Minuten aufwärmen, 5 Intervalle, danach 2 Minuten locker ausfahren.','Kondition')]}]},
 {id:'s3',name:'Session 3',focus:'Full Body Strength, Power & Agility',blocks:[{name:'A · Vorbereitung',items:[ex('foam3','Foam Roller Circuit',1,'1 Runde',foam,'Mobilität')]},{name:'B · Power & Kraft',items:[ex('stepjump','Step-up Jump',2,'4 / Seite','Explosiver Sprung auf/aus dem Step-up. Mindestens zwei Sätze sichtbar.','Explosivität'),ex('bandsquat','Banded Box Squat',1,'Sätze offen','Schweres Gewicht; aus der Box explosiv aufstehen. Satz- und Wiederholungszahl im Screenshot nicht lesbar.'),ex('incline','Single-arm DB Incline Bench Press',1,'Wdh. offen','Einarmiges Schrägbankdrücken, RPE 8–10. Satz- und Wiederholungszahl nicht sicher lesbar.'),ex('bstance','DB B-stance Romanian Deadlift',2,'6–8 / Seite','Einbeinbetonte Hüftbeuge, RPE 8–10.') ]},{name:'C · Core & Assistenz',items:[ex('plankdrag','Kettlebell Plank Drag',3,'8–10 / Seite','Kettlebell im Plank unter dem Körper durchziehen.'),ex('traises','Incline T Raises',2,'15–20','Brust auf Schrägbank, Arme in T-Form anheben.'),ex('hanging','Hanging Leg Raises',2,'8–12','Kontrolliertes Beinheben im Hang.'),ex('soleus','Single Leg Soleus Raise Iso Hold',2,'30s / Seite','Knie gebeugt, Ferse anheben und halten.') ]},{name:'D · Kondition',items:[ex('bikerepeat','Repeat Sprint Ability Bike Intervals',2,'6 Intervalle','3 Min Warm-up; Satz 1: 6×8s maximal/22s locker; 3 Min locker; Satz 2: 6×10s maximal/20s locker; 3 Min locker.','Kondition')]}]}
 ];
-const STORE='sl33-training-v3';let db;try{db=JSON.parse(localStorage.getItem(STORE))||{}}catch{db={}};db.logs ||= {};db.videos ||= {};db.completed ||= {};db.planned ||= {};db.goals ||= {};let activePlan='s1',activeTab='home',month=new Date(),timerEnd=0,timerLeft=90,timerId=null,fb=null,fbUser=null,syncing=false;
+const STORE='sl33-training-v3';let db;try{db=JSON.parse(localStorage.getItem(STORE))||{}}catch{db={}};db.logs ||= {};db.videos ||= {};db.completed ||= {};db.planned ||= {};db.goals ||= {};db.restTimes ||= {};let activePlan='s1',activeTab='home',month=new Date(),timerEnd=0,timerLeft=90,timerId=null,fb=null,fbUser=null,syncing=false;
 const $=id=>document.getElementById(id),today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`},safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function save(){localStorage.setItem(STORE,JSON.stringify(db));if(fbUser)queueSync()}
 function getLog(date= $('workoutDate').value,pid=activePlan){const key=date+'|'+pid;return db.logs[key] ||= {sets:{},notes:'',date,plan:pid,finished:false}}
@@ -60,6 +60,7 @@ function renderWorkout(){
      const prescription=one?'1 Runde · einmal vollständig durchführen':mode==='interval'?item.reps+' · Details in Anleitung':mode==='hold'?item.sets+' × '+item.reps:item.sets+' Sätze × '+item.reps;
      html+=`<div class="item"><div class="flex"><h3>${safe(item.name)}</h3><span class="pill">${safe(modeLabel(mode))}</span></div><div class="sub" style="margin:6px 0 10px">${safe(prescription)}</div>`;
      if(mode==='weighted')html+=`<button type="button" class="history-toggle" onclick="toggleExerciseHistory('${key}')">↗ Gewichtsverlauf ansehen</button><div id="history-${key}" class="exercise-history" hidden></div>`;
+      if(mode!=='circuit'&&mode!=='interval')html+=`<div class="rest-setting"><label>Pause nach Satz <input type="number" min="0" max="900" step="5" value="${safe(db.restTimes[key]??90)}" onchange="setRestTime('${key}',this.value)"> Sekunden</label><span class="mini">0 = aus · wird gespeichert</span></div><div id="rest-${key}" class="rest-countdown" hidden></div>`;
      if(one){
        const steps=item.desc.split(';').map(x=>x.trim()).filter(Boolean);
        html+=`<details><summary>Alle Übungen der Routine ansehen (${steps.length})</summary><ol class="sub" style="padding-left:20px">${steps.map(step=>`<li style="padding:4px 0">${safe(step)}</li>`).join('')}</ol></details>`;
@@ -86,9 +87,14 @@ function renderWorkout(){
    }
    html+='</div>';
  }
- $('workoutItems').innerHTML=html;$('workoutPercent').textContent=total?Math.round(done/total*100)+'%':'';$('workoutBar').style.width=(total?done/total*100:0)+'%';
+ $('workoutItems').innerHTML=html;timerDraw();$('workoutPercent').textContent=total?Math.round(done/total*100)+'%':'';$('workoutBar').style.width=(total?done/total*100:0)+'%';
 }
-function toggleSet(key,i){const l=getLog(),e=l.sets[key+'-'+i] ||= {};if(!e.done&&e.kg===undefined){const prev=previousSet(key,i,l.date);if(prev)e.kg=prev.kg}e.done=!e.done;if(!e.done)l.finished=false;save();renderWorkout()}
+function toggleSet(key,i){const l=getLog(),e=l.sets[key+'-'+i] ||= {};const completing=!e.done;if(completing&&e.kg===undefined){const prev=previousSet(key,i,l.date);if(prev)e.kg=prev.kg}e.done=completing;if(!e.done)l.finished=false;save();renderWorkout();if(completing&&i<getExerciseUnits(key)-1)beginRest(key)}
+function getExerciseUnits(key){for(const p of plans)for(const b of p.blocks)for(const e of b.items)if(e.id===key)return exerciseMode(e)==='circuit'?1:e.sets;return 1}
+function setRestTime(key,value){db.restTimes[key]=Math.max(0,Math.min(900,Number(value)||0));save()}
+let restExercise=null;
+function beginRest(key){const n=db.restTimes[key]??90;if(!n)return;restExercise=key;startTimer(n)}
+
 function setField(key,i,field,value){let e=getLog().sets[key+'-'+i] ||= {};e[field]=value;save()}
 function saveNotes(){getLog().notes=$('workoutNotes').value;save()}
 function finishWorkout(){let l=getLog();const p=plans.find(x=>x.id===activePlan),total=p.blocks.flatMap(b=>b.items).reduce((n,e)=>n+(exerciseMode(e)==='circuit'?1:e.sets),0),done=Object.values(l.sets).filter(s=>s.done).length;if(done<total&&!confirm(`${done} von ${total} Sätzen erledigt. Training trotzdem abschliessen?`))return;l.finished=true;save();navigate('stats')}
@@ -104,20 +110,79 @@ function renderCalendar(){const y=month.getFullYear(),m=month.getMonth(),start=(
 function calendarDay(date){selectedCalendarDate=date;document.querySelectorAll('.day').forEach(b=>b.classList.toggle('selected',b.dataset.date===date));const fixed=fixedWeek[weekday(date)][0],planned=db.planned[date]||[],logs=Object.values(db.logs).filter(l=>l.date===date),all=[...new Set([...planned,...logs.map(l=>l.plan)])];$('calendarDetail').innerHTML=`<div class="card"><h3>${safe(date)}</h3><p><strong>Fix:</strong> ${safe(fixed)}</p><button class="btn alt" onclick="openGoalsFor('${date}')">🎯 Ziele & Reflexion für diesen Tag</button><h3>Zusätzliche Trainings</h3>${all.length?all.map(id=>{const p=plans.find(p=>p.id===id),log=logs.find(l=>l.plan===id);return `<div style="padding:10px 0;border-top:1px solid var(--edge)"><strong>${safe(p?.name||id)}</strong> ${log?.finished?'✓':''}<div class="rowwrap" style="margin-top:8px"><button class="btn alt" onclick="openPlanned('${date}','${id}')">Training öffnen</button>${planned.includes(id)?`<button class="btn alt" onclick="removePlanned('${date}','${id}')">Aus Planung entfernen</button>`:''}</div></div>`}).join(''):'<p class="muted">Noch kein zusätzliches Training geplant.</p>'}<h3>Training hinzufügen</h3><div class="rowwrap">${plans.filter(p=>!all.includes(p.id)).map(p=>`<button class="btn alt" onclick="planSession('${date}','${p.id}')">+ ${safe(p.name)}</button>`).join('')||'<span class="mini">Alle drei Sessions sind bereits eingetragen.</span>'}</div></div>`}
 function renderStats(){const logs=Object.values(db.logs),finished=logs.filter(l=>l.finished),checked=logs.reduce((a,l)=>a+Object.values(l.sets).filter(s=>s.done).length,0),days=new Set(logs.filter(l=>l.finished||Object.values(l.sets).some(s=>s.done)).map(l=>l.date)).size;$('statCards').innerHTML=`<div class="stat"><b>${finished.length}</b><small>Trainings fertig</small></div><div class="stat"><b>${checked}</b><small>Sätze erledigt</small></div><div class="stat"><b>${days}</b><small>Trainingstage</small></div>`;let prs={};for(const l of logs)for(const [key,s] of Object.entries(l.sets)){const kg=Number(s.kg);if(!s.done||!Number.isFinite(kg)||kg<=0)continue;const id=key.replace(/-\d+$/,'');if(!prs[id]||kg>prs[id].kg)prs[id]={kg,date:l.date}}$('prList').innerHTML=Object.entries(prs).sort((a,b)=>b[1].kg-a[1].kg).map(([id,v])=>`<div class="card flex"><div>${safe(findName(id))}<div class="mini">${safe(v.date)}</div></div><b>${v.kg} kg</b></div>`).join('')||'<p class="muted">Trage Gewichte ein und hake Sätze ab, um Bestleistungen zu sehen.</p>';$('historyList').innerHTML=logs.filter(l=>l.finished||Object.values(l.sets).some(s=>s.done)).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20).map(l=>`<div class="card flex"><span>${safe(l.date)} · ${safe(plans.find(p=>p.id===l.plan)?.name||l.plan)}</span><span class="badge">${l.finished?'✓ Fertig':'Begonnen'}</span></div>`).join('')||'<p class="muted">Noch keine Trainings gespeichert.</p>'}
 function findName(id){for(const p of plans)for(const b of p.blocks)for(const e of b.items)if(e.id===id)return e.name;return id}
-function timerDraw(){const n=Math.max(0,timerLeft);$('timerDisplay').textContent=String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0')}
-function startTimer(n){clearInterval(timerId);timerLeft=n;timerEnd=Date.now()+n*1000;timerId=setInterval(()=>{timerLeft=Math.max(0,Math.ceil((timerEnd-Date.now())/1000));timerDraw();if(!timerLeft){pauseTimer();alert('Pause vorbei!')}},250);timerDraw()}
-function pauseTimer(){if(timerId){timerLeft=Math.max(0,Math.ceil((timerEnd-Date.now())/1000));clearInterval(timerId);timerId=null;timerDraw()}}
-function resetTimer(){pauseTimer();timerLeft=90;timerDraw()}
+function timerDraw(){if(!restExercise)return;const el=$('rest-'+restExercise);if(!el)return;el.hidden=false;const n=Math.max(0,timerLeft);el.textContent=n?'⏱ Pause: '+String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0'):'✓ Pause vorbei – nächster Satz!'}
+function startTimer(n){clearInterval(timerId);timerLeft=n;timerEnd=Date.now()+n*1000;timerId=setInterval(()=>{timerLeft=Math.max(0,Math.ceil((timerEnd-Date.now())/1000));timerDraw();if(!timerLeft){clearInterval(timerId);timerId=null}},250);timerDraw()}
+function pauseTimer(){clearInterval(timerId);timerId=null}
+function resetTimer(){pauseTimer();timerLeft=0;timerDraw()}
 function exportData(){const blob=new Blob([JSON.stringify({version:3,data:db},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='sl33-training-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 function importData(ev){const file=ev.target.files?.[0];if(!file)return;file.text().then(t=>{let obj=JSON.parse(t);if(!obj.data?.logs||!confirm('Bestehende lokale Trainingsdaten durch die Sicherung ersetzen?'))return;db=obj.data;db.videos ||= {};db.completed ||= {};db.planned ||= {};db.goals ||= {};save();renderHome();alert('Daten importiert')}).catch(()=>alert('Ungültige Sicherungsdatei.'));ev.target.value=''}
-// Optional Firebase cloud integration. Requires a real Firebase project and restrictive Firestore rules.
-let syncDelay;function queueSync(){clearTimeout(syncDelay);syncDelay=setTimeout(syncCloud,1000)}
+// Firebase Auth and private Firestore. No secrets are embedded in client code.
+const ADMIN_UID='LQzUxoUnkhVIR7gFrT74AHmNO4t2';
+const FIREBASE_CONFIG={apiKey:'AIzaSyDrWe116T7CCzBYw4YjyGtGdsZFDRPzVzw',authDomain:'sl33-performance.firebaseapp.com',projectId:'sl33-performance',storageBucket:'sl33-performance.firebasestorage.app',messagingSenderId:'443932352448',appId:'1:443932352448:web:8e739a9885fdc94ef6f225'};
+let isApproved=false,cloudReady=false,cloudSaving=false,cloudTimer=null,cloudUnsubscribe=null;
 function loadScript(url){return new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=url;s.onload=resolve;s.onerror=reject;document.head.appendChild(s)})}
-async function connectFirebase(){try{let cfg=JSON.parse($('firebaseConfig').value);if(!cfg.apiKey||!cfg.projectId||!cfg.authDomain||!cfg.appId)throw Error('apiKey, authDomain, projectId und appId fehlen.');localStorage.setItem('sl33-firebase-config',JSON.stringify(cfg));if(!window.firebase){await loadScript('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');await loadScript('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js');await loadScript('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js')}if(!firebase.apps.length)firebase.initializeApp(cfg);fb=firebase;fb.auth().onAuthStateChanged(async user=>{fbUser=user;$('authPanel').classList.remove('hidden');$('cloudStatus').textContent=user?'Angemeldet: '+user.email:'Firebase verbunden · Bitte anmelden';if(user){try{const snap=await fb.firestore().collection('users').doc(user.uid).get();if(snap.exists){const remote=snap.data().data;if(remote?.logs){if(confirm('Cloud-Daten laden? Die lokalen Daten werden dabei ersetzt.')){db=remote;db.videos ||= {};db.completed ||= {};db.planned ||= {};db.goals ||= {};localStorage.setItem(STORE,JSON.stringify(db));if(activeTab==='workout')renderWorkout();if(activeTab==='stats')renderStats();if(activeTab==='goals')renderGoals()}}}else await syncCloud()}catch(e){$('cloudStatus').textContent='Cloud-Lesen fehlgeschlagen: '+e.message}}});$('cloudStatus').textContent='Firebase wird verbunden …'}catch(e){$('cloudStatus').textContent='Verbindung fehlgeschlagen: '+e.message}}
-async function authAction(action){if(!fb)return;try{if(action==='logout'){await fb.auth().signOut();return}const email=$('authEmail').value.trim(),pass=$('authPassword').value;if(action==='register')await fb.auth().createUserWithEmailAndPassword(email,pass);else await fb.auth().signInWithEmailAndPassword(email,pass)}catch(e){alert('Anmeldung: '+e.message)}}
-async function syncCloud(){if(!fb||!fbUser||syncing)return;syncing=true;try{await fb.firestore().collection('users').doc(fbUser.uid).set({data:db,updatedAt:fb.firestore.FieldValue.serverTimestamp()});$('cloudStatus').textContent='Cloud synchronisiert · '+fbUser.email}catch(e){$('cloudStatus').textContent='Cloud-Speicherung fehlgeschlagen: '+e.message}finally{syncing=false}}
-function disconnectFirebase(){localStorage.removeItem('sl33-firebase-config');$('firebaseConfig').value='';$('cloudStatus').textContent='Konfiguration entfernt. Seite neu laden, um die Verbindung zu beenden.'}
-
+function setAuthMessage(message){const el=$('loginMessage');if(el)el.textContent=message}
+function showGate(view){$('loginGate').classList.toggle('hidden',view==='app');$('pendingGate').classList.toggle('hidden',view!=='pending');document.querySelector('main').classList.toggle('hidden',view!=='app');document.querySelector('header').classList.toggle('hidden',view!=='app');document.querySelector('nav.tabs').classList.toggle('hidden',view!=='app');}
+async function connectFirebase(){try{
+  showGate('login');setAuthMessage('Verbinde mit Firebase …');
+  if(!window.firebase){await loadScript('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');await loadScript('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js');await loadScript('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js')}
+  if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);fb=firebase;cloudReady=true;
+  fb.auth().onAuthStateChanged(async user=>{
+    if(cloudUnsubscribe){cloudUnsubscribe();cloudUnsubscribe=null}
+    fbUser=user;isApproved=false;
+    if(!user){showGate('login');setAuthMessage('Melde dich an oder beantrage ein Konto.');return}
+    if(user.uid===ADMIN_UID){await allowAccess();return}
+    showGate('pending');$('pendingEmail').textContent=user.email||'';
+    cloudUnsubscribe=fb.firestore().collection('approvals').doc(user.uid).onSnapshot(async snap=>{
+      if(!fbUser||fbUser.uid!==user.uid)return;
+      if(snap.exists&&snap.data().approved===true){if(!isApproved)await allowAccess()}
+      else{isApproved=false;showGate('pending');$('pendingStatus').textContent=snap.exists&&snap.data().approved===false?'Dein Antrag wurde abgelehnt.':'Dein Antrag wartet auf die Freigabe des Administrators.'}
+    },e=>{$('pendingStatus').textContent='Freigabestatus nicht abrufbar: '+e.message});
+  });
+}catch(e){setAuthMessage('Firebase-Verbindung fehlgeschlagen: '+e.message);showGate('login')}}
+async function allowAccess(){
+  isApproved=true;showGate('app');$('cloudStatus').textContent='Angemeldet: '+(fbUser.email||'');
+  await loadCloudOnce();if(fbUser.uid===ADMIN_UID)loadRequests();
+}
+async function loadCloudOnce(){
+ try{const snap=await fb.firestore().collection('users').doc(fbUser.uid).get();
+   if(snap.exists&&snap.data().data?.logs){const remote=snap.data().data;
+     if(confirm('Cloud-Trainingsdaten auf diesem Gerät laden? Deine lokalen Daten bleiben erhalten, wenn du Abbrechen wählst.')){
+       db=remote;db.logs||={};db.videos||={};db.completed||={};db.planned||={};db.goals||={};db.restTimes||={};localStorage.setItem(STORE,JSON.stringify(db));navigate('home')
+     }
+   }else{$('cloudStatus').textContent='Angemeldet · noch keine Cloud-Sicherung. Bitte zuerst deine Daten exportieren.'}
+ }catch(e){$('cloudStatus').textContent='Cloud-Laden fehlgeschlagen: '+e.message}
+}
+async function authAction(action){
+ if(!fb)return;try{
+  if(action==='logout'){await fb.auth().signOut();return}
+  const email=$('authEmail').value.trim(),pass=$('authPassword').value;
+  if(!email||!pass)throw Error('Bitte E-Mail und Passwort eingeben.');
+  if(action==='register'){
+   const cred=await fb.auth().createUserWithEmailAndPassword(email,pass);
+   await fb.firestore().collection('requests').doc(cred.user.uid).set({email,createdAt:fb.firestore.FieldValue.serverTimestamp(),status:'pending'});
+   setAuthMessage('Konto erstellt. Warte auf die Freigabe durch den Administrator.');
+  }else await fb.auth().signInWithEmailAndPassword(email,pass)
+ }catch(e){setAuthMessage('Anmeldung: '+e.message)}
+}
+async function loadRequests(){
+ if(!fbUser||fbUser.uid!==ADMIN_UID)return;
+ const box=$('adminRequests');box.classList.remove('hidden');
+ try{const snap=await fb.firestore().collection('requests').get();
+  const requests=snap.docs.filter(d=>d.data().status==='pending');
+  $('requestList').innerHTML=requests.length?requests.map(d=>`<div class="request-entry"><span>${safe(d.data().email||d.id)}</span><div class="rowwrap"><button class="btn" onclick="reviewRequest('${d.id}',true)">Genehmigen</button><button class="btn alt" onclick="reviewRequest('${d.id}',false)">Ablehnen</button></div></div>`).join(''):'<p class="mini">Keine offenen Anfragen.</p>';
+ }catch(e){$('requestList').textContent='Anfragen konnten nicht geladen werden: '+e.message}
+}
+async function reviewRequest(uid,approve){
+ if(!fbUser||fbUser.uid!==ADMIN_UID)return;
+ if(!confirm(approve?'Dieses Konto freischalten?':'Diese Anfrage ablehnen?'))return;
+ try{const batch=fb.firestore().batch();batch.set(fb.firestore().collection('approvals').doc(uid),{approved:approve,reviewedAt:fb.firestore.FieldValue.serverTimestamp(),reviewedBy:fbUser.uid});batch.update(fb.firestore().collection('requests').doc(uid),{status:approve?'approved':'rejected'});await batch.commit();await loadRequests()}catch(e){alert('Freigabe fehlgeschlagen: '+e.message)}
+}
+function queueSync(){if(!isApproved)return;clearTimeout(cloudTimer);cloudTimer=setTimeout(syncCloud,1800)}
+async function syncCloud(){if(!fb||!fbUser||!isApproved||cloudSaving)return;cloudSaving=true;try{
+ await fb.firestore().collection('users').doc(fbUser.uid).set({data:db,updatedAt:fb.firestore.FieldValue.serverTimestamp()});$('cloudStatus').textContent='Cloud gespeichert · '+fbUser.email
+}catch(e){$('cloudStatus').textContent='Cloud-Speicherung fehlgeschlagen: '+e.message}finally{cloudSaving=false}}
+function disconnectFirebase(){authAction('logout')}
 // Personal goals and reflections: local first, also included in existing JSON export / optional cloud sync.
 let goalDate=today(),goalType='match';
 const goalTypes={match:'Match',ice:'Eistraining',gym:'Krafttraining',other:'Sonstiges'};
@@ -142,4 +207,4 @@ function renderGoals(){
 }
 function goalOpenHistory(date,type){goalDate=date;goalType=type;renderGoals();window.scrollTo({top:0,behavior:'smooth'})}
 
-$('firebaseConfig').value=localStorage.getItem('sl33-firebase-config')||'';renderHome();timerDraw();if($('firebaseConfig').value)connectFirebase();
+renderHome();connectFirebase();
