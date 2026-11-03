@@ -1,0 +1,20 @@
+SL33 Performance – kostenloser Smart Coach (Version 1)
+
+Enthalten: Tagescheck, transparenter geschätzter Readiness Score,
+Session-RPE Belastungstagebuch, fixe Eistrainings/Matches, optionale
+Gym-Vorschläge mit ausdrücklicher Übernahme, regelbasierter Frage-Coach.
+
+WICHTIG: Dies ist KEIN generatives KI-Modell. Die Berechnungen beruhen
+auf einfachen Heuristiken und sind keine medizinische Beurteilung.
+Der Coach kann keine sichere Sportfreigabe erteilen.
+
+Vor dem Update: In der alten App unter Cloud eine JSON-Datensicherung
+exportieren. Die ZIP entpacken und alle App-Dateien aus dem Ordner in
+das Stammverzeichnis des GitHub-Repositories hochladen. ZIP selbst nicht
+hochladen. Die neue Datei smart-coach.js muss neben app.js liegen.
+
+Bestehende Firebase- und Firestore-Einstellungen werden beibehalten.
+Cloud-Sync: Vor Nutzung auf mehreren Geräten sichern und die Synchronisierung
+prüfen. Nicht blind Cloud- und lokale Daten überschreiben.
+
+Keine zusätzlichen Abos oder API-Schlüssel erforderlich.
