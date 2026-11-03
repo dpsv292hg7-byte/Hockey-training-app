@@ -27,7 +27,51 @@ function getLog(date= $('workoutDate').value,pid=activePlan){const key=date+'|'+
 function navigate(tab){activeTab=tab;document.querySelectorAll('main>section').forEach(el=>el.classList.toggle('hidden',el.id!==tab));document.querySelectorAll('[data-tab]').forEach(el=>el.classList.toggle('active',el.dataset.tab===tab));if(tab==='home')renderHome();if(tab==='calendarPage')renderCalendar();if(tab==='stats')renderStats();window.scrollTo(0,0)}
 function renderHome(){ $('sessionCards').innerHTML=plans.map(p=>{let total=p.blocks.reduce((a,b)=>a+b.items.length,0);return `<div class="card"><div class="flex"><span class="pill">${safe(p.name.toUpperCase())}</span><span class="mini">${total} Blöcke / Übungen</span></div><h2 style="margin:13px 0 6px">${safe(p.focus)}</h2><p class="muted">${p.blocks.length} Trainingsabschnitte · selbst auswählbar</p><button class="btn" onclick="openWorkout('${p.id}')">Training öffnen →</button></div>`}).join('')}
 function openWorkout(id){activePlan=id;$('workoutDate').value=today();navigate('workout');renderWorkout()}
-function renderWorkout(){const p=plans.find(x=>x.id===activePlan),log=getLog();$('workoutTitle').textContent=p.name;$('workoutFocus').textContent=p.focus;$('workoutNotes').value=log.notes||'';let total=0,done=0;let html='';for(const block of p.blocks){html+=`<div class="section-label">${safe(block.name)}</div><div class="card">`;for(const item of block.items){const key=item.id;html+=`<div class="item"><div class="flex"><h3>${safe(item.name)}</h3><span class="pill">${safe(item.kind)}</span></div><div class="sub">${safe(item.sets+' × '+item.reps)}</div><details><summary>Anleitung anzeigen</summary><div class="sub">${safe(item.desc||'Kontrollierte Technik und saubere Ausführung.')}</div></details><div class="setrow">`;for(let i=0;i<item.sets;i++){total++;const entry=log.sets[key+'-'+i]||{};if(entry.done)done++;html+=`<button aria-label="Satz ${i+1} abhaken" class="check ${entry.done?'yes':''}" onclick="toggleSet('${key}',${i})">${entry.done?'✓':i+1}</button><label>kg <input aria-label="Gewicht Satz ${i+1}" type="number" min="0" step="0.5" value="${safe(entry.kg??'')}" onchange="setField('${key}',${i},'kg',this.value)"></label><label>Wdh. <input aria-label="Wiederholungen Satz ${i+1}" type="text" style="width:86px" value="${safe(entry.reps??'')}" placeholder="${safe(item.reps)}" onchange="setField('${key}',${i},'reps',this.value)"></label>`}html+=`</div><div class="rowwrap" style="margin-top:12px"><a class="link" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent('Sam Lyne SLP '+item.name)}">YouTube-Suche ↗</a>${db.videos[key]?`<a class="link" href="${safe(db.videos[key])}" target="_blank" rel="noopener">Gespeichertes Video ↗</a>`:''}<button class="btn alt" style="font-size:11px;padding:6px" onclick="setVideo('${key}')">Videolink</button></div></div>`}html+='</div>'} $('workoutItems').innerHTML=html;$('workoutPercent').textContent=total?Math.round(done/total*100)+'%':'';$('workoutBar').style.width=(total?done/total*100:0)+'%'}
+function exerciseMode(item){
+ const id=item.id;
+ if(['foam1','foam2','foam3','mob1','mob2','sprintprep'].includes(id))return 'circuit';
+ if(['bikeana','bikerepeat'].includes(id))return 'interval';
+ if(id==='soleus')return 'hold';
+ if(['sprint10','depth','stepjump','plyopush','ham','pallof','hanging'].includes(id))return 'bodyweight';
+ if(['mbslam','around','pinch','rollups','plankdrag'].includes(id))return 'equipment';
+ if(id==='traises')return 'weighted';
+ return 'weighted';
+}
+function modeLabel(mode){return ({circuit:'Routine',interval:'Intervalle',hold:'Haltezeit',bodyweight:'Ohne Zusatzgewicht',equipment:'Geräteübung',weighted:'Krafttraining'})[mode]}
+function renderWorkout(){
+ const p=plans.find(x=>x.id===activePlan),log=getLog();
+ $('workoutTitle').textContent=p.name;$('workoutFocus').textContent=p.focus;$('workoutNotes').value=log.notes||'';
+ let total=0,done=0,html='';
+ for(const block of p.blocks){
+   html+=`<div class="section-label">${safe(block.name)}</div><div class="card">`;
+   for(const item of block.items){
+     const key=item.id,mode=exerciseMode(item),one=mode==='circuit',units=one?1:item.sets;
+     const prescription=one?'1 Runde · einmal vollständig durchführen':mode==='interval'?item.reps+' · Details in Anleitung':mode==='hold'?item.sets+' × '+item.reps:item.sets+' Sätze × '+item.reps;
+     html+=`<div class="item"><div class="flex"><h3>${safe(item.name)}</h3><span class="pill">${safe(modeLabel(mode))}</span></div><div class="sub" style="margin:6px 0 10px">${safe(prescription)}</div>`;
+     if(one){
+       const steps=item.desc.split(';').map(x=>x.trim()).filter(Boolean);
+       html+=`<details><summary>Alle Übungen der Routine ansehen (${steps.length})</summary><ol class="sub" style="padding-left:20px">${steps.map(step=>`<li style="padding:4px 0">${safe(step)}</li>`).join('')}</ol></details>`;
+     }else{
+       html+=`<details><summary>Technik und Ablauf ansehen</summary><div class="sub">${safe(item.desc||'Saubere, kontrollierte Ausführung.')}</div></details>`;
+     }
+     html+='<div class="setrow">';
+     for(let i=0;i<units;i++){
+       total++;const entry=log.sets[key+'-'+i]||{};if(entry.done)done++;
+       const buttonText=entry.done?'✓':one?'✓':mode==='interval'?'Block '+(i+1):'Satz '+(i+1);
+       html+=`<button aria-label="${one?'Routine':mode==='interval'?'Intervallblock':'Satz'} ${i+1} abhaken" class="check ${entry.done?'yes':''}" style="${one?'width:auto;padding:0 14px;':''}" onclick="toggleSet('${key}',${i})">${buttonText}</button>`;
+       if(mode==='weighted')html+=`<label>Gewicht (kg) <input aria-label="Gewicht Satz ${i+1}" type="number" min="0" step="0.5" value="${safe(entry.kg??'')}" onchange="setField('${key}',${i},'kg',this.value)"></label>`;
+       if(['weighted','equipment','bodyweight'].includes(mode))html+=`<label>Wdh. <input aria-label="Wiederholungen Satz ${i+1}" type="text" style="width:86px" value="${safe(entry.reps??'')}" placeholder="${safe(item.reps)}" onchange="setField('${key}',${i},'reps',this.value)"></label>`;
+     }
+     html+='</div>';
+     if(one)html+='<div class="mini" style="margin-top:8px">Keine Gewichte nötig · nach der gesamten Routine abhaken</div>';
+     if(mode==='interval')html+='<div class="mini" style="margin-top:8px">Zeiten stehen in der Anleitung · jeden Intervallblock nach Abschluss abhaken</div>';
+     if(mode==='hold')html+='<div class="mini" style="margin-top:8px">Haltezeit gemäss Vorgabe · kein Gewicht eintragen</div>';
+     html+=`<div class="rowwrap" style="margin-top:12px"><a class="link" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent('Sam Lyne SLP '+item.name)}">Video suchen ↗</a>${db.videos[key]?`<a class="link" href="${safe(db.videos[key])}" target="_blank" rel="noopener">Gespeichertes Video ↗</a>`:''}<button class="btn alt" style="font-size:11px;padding:6px" onclick="setVideo('${key}')">Videolink</button></div></div>`;
+   }
+   html+='</div>';
+ }
+ $('workoutItems').innerHTML=html;$('workoutPercent').textContent=total?Math.round(done/total*100)+'%':'';$('workoutBar').style.width=(total?done/total*100:0)+'%';
+}
 function toggleSet(key,i){let e=getLog().sets[key+'-'+i] ||= {};e.done=!e.done;save();renderWorkout()}
 function setField(key,i,field,value){let e=getLog().sets[key+'-'+i] ||= {};e[field]=value;save()}
 function saveNotes(){getLog().notes=$('workoutNotes').value;save()}
