@@ -93,3 +93,9 @@ input:disabled,textarea:disabled,button:disabled{opacity:.65;cursor:not-allowed}
 /* Qualitätssicherung: destructive actions stay visually distinct. */
 .danger-btn { border-color: #bd5264 !important; color: #ffb9c3 !important; }
 .danger-btn:hover { background: rgba(189,82,100,.14) !important; }
+
+/* Übersichtlicher: eindeutige Aktionsgruppen und Platz für Touch-Bedienung */
+.rowwrap {gap:10px;}
+.goal-entry,.coach-chat,.coach-suggestion {margin-bottom:12px;}
+.danger-btn {white-space:normal;}
+@media(max-width:540px){.card .btn {min-height:42px;} .goal-actions{gap:7px;} .goal-actions .btn{font-size:.86rem;} }

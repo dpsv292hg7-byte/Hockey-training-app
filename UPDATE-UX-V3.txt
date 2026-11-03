@@ -1,0 +1,14 @@
+SL33 PERFORMANCE – UX V3
+
+Änderungen gegenüber Einfach V2:
+- Startseite zeigt Tagesplan, abgeschlossene Trainings, offene Trainings und Ziele.
+- Session-Karten zeigen, ob ein Entwurf vorhanden ist.
+- Nach Abschluss wird Training in den Verlauf verschoben und die nächste Einheit beginnt leer.
+- Zielübersicht zeigt jetzt auch unvollständige Entwürfe mit Bearbeiten/Löschen.
+- Coach-Tageschecks lassen sich direkt aus der Historie löschen.
+- Verlauf/Löschaktionen klarer beschriftet, bessere mobile Touch-Flächen.
+- Logo, Login, Firestore und fixe Eis-/Matchtermine unverändert.
+
+WICHTIG: Vor Upload App-Daten exportieren.
+Sicherheit: Löschen ist endgültig und kann mit Cloud synchronisiert werden.
+Prüfung: JavaScript-Syntax und Dateiintegrität, kein vollständiger iPad-/Firebase-Test.
