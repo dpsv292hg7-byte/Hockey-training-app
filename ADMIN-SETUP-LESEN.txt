@@ -11,3 +11,5 @@ ONLINE: Kein präziser Live-Status. Ein sichtbarer Tab sendet alle 60 Sekunden e
 WICHTIG: Diese Funktion sperrt Firestore-Zugriff, löscht NICHT das Firebase-Auth-Konto oder Daten, und kann bereits lokal heruntergeladene Daten nicht von einem fremden Gerät zurückholen.
 
 Bei Regeln-Fehler zuerst die Regeln in Firebase kontrollieren. Niemals pauschal allow read,write:true setzen.
+
+ADMIN: Nur Firebase-UID LQzUxoUnkhVIR7gFrT74AHmNO4t2 UND E-Mail 28simon06@gmail.com erhalten Admin-Rechte. Beide Bedingungen müssen stimmen.

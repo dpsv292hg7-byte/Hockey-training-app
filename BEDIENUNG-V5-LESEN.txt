@@ -1,0 +1,4 @@
+SL33 Bedienung V5 – Vorschau/Testversion, nicht automatisch veröffentlicht.
+Neu: angefangene Trainings auf der Startseite fortsetzen (auch ältere Tage); Training im Kalender öffnet direkt das richtige Datum; Sprung zum nächsten offenen Satz; Entwurf zurücksetzen mit Bestätigung; vollständiger Verlauf statt nur 20 Einträgen; klarere Navigation.
+Admin-Regeln, Logo, bestehende Trainingsdaten und Firebase-Konfiguration unverändert.
+Vor Installation Daten exportieren. Online-/Firebase-Tests mit echten Konten sind noch ausstehend.

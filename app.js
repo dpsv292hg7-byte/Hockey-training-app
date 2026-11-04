@@ -11,7 +11,19 @@ const plans=[
 ];
 const STORE='sl33-training-v3';let db;try{db=JSON.parse(localStorage.getItem(STORE))||{}}catch{db={}};db.logs ||= {};db.videos ||= {};db.completed ||= {};db.planned ||= {};db.goals ||= {};db.restTimes ||= {};db.goalDrafts ||= {};db.workoutArchive ||= [];let activePlan='s1',activeTab='home',month=new Date(),timerEnd=0,timerLeft=90,timerId=null,fb=null,fbUser=null,syncing=false;
 const $=id=>document.getElementById(id),today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`},safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function save(){localStorage.setItem(STORE,JSON.stringify(db));if(fbUser)queueSync()}
+function emptyData(){return {logs:{},videos:{},completed:{},planned:{},goals:{},restTimes:{},goalDrafts:{},workoutArchive:[]}}
+function normalizeData(value){const d=value&&typeof value==='object'&&!Array.isArray(value)?value:emptyData();for(const key of ['logs','videos','completed','planned','goals','restTimes','goalDrafts'])if(!d[key]||typeof d[key]!=='object'||Array.isArray(d[key]))d[key]={};if(!Array.isArray(d.workoutArchive))d.workoutArchive=[];return d}
+function userStore(uid){return STORE+'-user-'+uid}
+function loadUserData(user){
+  let value=null;try{value=JSON.parse(localStorage.getItem(userStore(user.uid)))}catch{}
+  // Only the original admin may migrate legacy unscoped data. Never expose it to another account.
+  if(!value&&isAdminUser(user)){
+    try{value=JSON.parse(localStorage.getItem(STORE))}catch{}
+    if(value)localStorage.setItem(userStore(user.uid),JSON.stringify(normalizeData(value)));
+  }
+  db=normalizeData(value);renderHome();
+}
+function save(){if(!fbUser||!isApproved)return;localStorage.setItem(userStore(fbUser.uid),JSON.stringify(db));queueSync()}
 function allTrainingLogs(){return [...Object.values(db.logs),...(db.workoutArchive||[])]}
 function archiveFinishedLog(date,id){const key=date+'|'+id,l=db.logs[key];if(!l?.finished)return false;db.workoutArchive ||= [];db.workoutArchive.push({...l,archiveId:'wa-'+Date.now()+'-'+Math.random().toString(36).slice(2,8)});delete db.logs[key];save();return true}
 function removeArchivedWorkout(id){if(!confirm('Abgeschlossenes Training endgültig aus dem Verlauf löschen?'))return;db.workoutArchive=(db.workoutArchive||[]).filter(l=>l.archiveId!==id);save();renderStats();renderCalendar()}
@@ -22,10 +34,14 @@ function renderHome(){
  const drafts=Object.values(db.logs).filter(l=>Object.values(l.sets||{}).some(x=>x.done)||l.notes?.trim()).length;
  const goalsOpen=Object.values(db.goals).filter(g=>!g.closed&&(g.items?.length||g.notes?.trim()||g.learned?.trim())).length;
  const day=today(),fixed=fixedWeek[weekday(day)][0];
+ const activeDrafts=Object.values(db.logs).filter(l=>!l.finished&&(Object.values(l.sets||{}).some(x=>x.done||x.kg!==undefined||x.reps)||l.notes?.trim())).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3);
  $('homeSummary').innerHTML=`<div class="card"><h3>Heute · ${safe(day)}</h3><p><strong>${safe(fixed)}</strong> · deine fixen Eis- und Matchtermine bleiben bestehen.</p><div class="rowwrap"><span class="pill">${done} abgeschlossene Trainings</span><span class="pill">${drafts} offene Trainings</span><span class="pill">${goalsOpen} offene Zieleinträge</span></div><div class="rowwrap"><button class="btn" onclick="navigate('calendarPage')">Wochenplan öffnen</button><button class="btn alt" onclick="navigate('goals')">Ziele öffnen</button><button class="btn alt" onclick="navigate('stats')">Verlauf / Löschen</button></div><p class="mini">Training abschliessen → im Verlauf gespeichert → beim nächsten Start wieder 0 %. Einträge im Verlauf lassen sich löschen.</p></div>`;
- $('sessionCards').innerHTML=plans.map(p=>{let total=p.blocks.reduce((a,b)=>a+b.items.length,0),draft=db.logs[day+'|'+p.id],progress=draft?Object.values(draft.sets||{}).filter(x=>x.done).length:0;return `<div class="card"><div class="flex"><span class="pill">${safe(p.name.toUpperCase())}</span><span class="mini">${total} Übungen</span></div><h2 style="margin:13px 0 6px">${safe(p.focus)}</h2><p class="muted">${draft&&progress?progress+' Sätze im Entwurf · weitermachen':'Bereit · startet bei 0 %'}</p><button class="btn" onclick="openWorkout('${p.id}')">${draft&&progress?'Weitertrainieren':'Training starten'} →</button></div>`}).join('')
+ $('sessionCards').innerHTML=(activeDrafts.length?`<div class="card"><h3>Weitermachen</h3><p class="mini">Deine begonnenen Einheiten bleiben gespeichert.</p>${activeDrafts.map(l=>`<div class="rowwrap" style="justify-content:space-between;padding:7px 0"><span>${safe(l.date)} · ${safe(plans.find(p=>p.id===l.plan)?.name||l.plan)}</span><button class="btn alt" onclick="openWorkoutOn('${safe(l.date)}','${safe(l.plan)}')">Fortsetzen</button></div>`).join('')}</div>`:'')+plans.map(p=>{let total=p.blocks.reduce((a,b)=>a+b.items.length,0),draft=db.logs[day+'|'+p.id],progress=draft?Object.values(draft.sets||{}).filter(x=>x.done).length:0;return `<div class="card"><div class="flex"><span class="pill">${safe(p.name.toUpperCase())}</span><span class="mini">${total} Übungen</span></div><h2 style="margin:13px 0 6px">${safe(p.focus)}</h2><p class="muted">${draft&&progress?progress+' Sätze im Entwurf · weitermachen':'Bereit · startet bei 0 %'}</p><button class="btn" onclick="openWorkout('${p.id}')">${draft&&progress?'Weitertrainieren':'Training starten'} →</button></div>`}).join('')
 }
-function openWorkout(id){activePlan=id;$('workoutDate').value=today();archiveFinishedLog(today(),id);navigate('workout');renderWorkout()}
+function openWorkout(id){openWorkoutOn(today(),id)}
+function openWorkoutOn(date,id){if(!plans.some(p=>p.id===id))return;activePlan=id;$('workoutDate').value=date;archiveFinishedLog(date,id);navigate('workout');renderWorkout()}
+function jumpToNextSet(){const first=document.querySelector('#workoutItems .check:not(.yes)');if(first){first.closest('.set-card')?.scrollIntoView({behavior:'smooth',block:'center'});first.focus({preventScroll:true})}else alert('Alle Sätze sind abgehakt. Du kannst das Training jetzt abschliessen.')}
+function resetWorkoutDraft(){const date=$('workoutDate').value,key=date+'|'+activePlan,l=db.logs[key];if(!l||!Object.keys(l.sets||{}).length&&!l.notes?.trim())return alert('Noch keine Eingaben zum Zurücksetzen.');if(!confirm('Alle Eingaben dieses Trainings zurücksetzen? Abgeschlossene Trainings im Verlauf bleiben erhalten.'))return;delete db.logs[key];save();renderWorkout()}
 function exerciseMode(item){
  const id=item.id;
  if(['foam1','foam2','foam3','mob1','mob2','sprintprep'].includes(id))return 'circuit';
@@ -61,7 +77,7 @@ function toggleExerciseHistory(id){
 }
 function renderWorkout(){
  const p=plans.find(x=>x.id===activePlan);archiveFinishedLog($('workoutDate').value,activePlan);const log=getLog(),locked=false;
- $('workoutTitle').textContent=p.name;$('workoutFocus').textContent=p.focus;$('workoutNotes').value=log.notes||'';$('workoutNotes').disabled=locked;$('workoutDate').disabled=false;$('workoutCompletion').innerHTML=locked?`<div class="archive-notice">✓ Dieses Training ist abgeschlossen und im Kalender gespeichert. <button class="btn alt" onclick="reopenWorkout()">Bearbeitung wieder öffnen</button></div>`:'<p class="mini">Gewichte und Sätze werden als Entwurf automatisch gesichert. Nach dem Training unten bewusst abschliessen.</p>';$('finishWorkoutBtn').hidden=locked;const del=$('deleteWorkoutBtn');if(del)del.hidden=!db.logs[$('workoutDate').value+'|'+activePlan];
+ $('workoutTitle').textContent=p.name;$('workoutFocus').textContent=p.focus;$('workoutNotes').value=log.notes||'';$('workoutNotes').disabled=locked;$('workoutDate').disabled=false;$('workoutCompletion').innerHTML=locked?`<div class="archive-notice">✓ Dieses Training ist abgeschlossen und im Kalender gespeichert. <button class="btn alt" onclick="reopenWorkout()">Bearbeitung wieder öffnen</button></div>`:'<p class="mini">Automatisch gespeichert · Hake Sätze ab und schliesse die Einheit am Ende ab.</p><div class="rowwrap"><button type="button" class="btn alt" onclick="jumpToNextSet()">Zum nächsten offenen Satz ↓</button><button type="button" class="btn alt" onclick="resetWorkoutDraft()">Entwurf zurücksetzen</button></div>';$('finishWorkoutBtn').hidden=locked;const del=$('deleteWorkoutBtn');if(del)del.hidden=!db.logs[$('workoutDate').value+'|'+activePlan];
  let total=0,done=0,html='';
  for(const block of p.blocks){
    html+=`<div class="section-label">${safe(block.name)}</div><div class="card">`;
@@ -123,54 +139,56 @@ function deleteWorkout(date,id){
 }
 function deleteCurrentWorkout(){const date=$('workoutDate').value;if(!db.logs[date+'|'+activePlan])return alert('Für diesen Tag gibt es noch keinen Trainingseintrag.');deleteWorkout(date,activePlan);navigate('calendarPage')}
 
-function openPlanned(date,id){openWorkout(id);$('workoutDate').value=date;renderWorkout()}
+function openPlanned(date,id){openWorkoutOn(date,id)}
 function renderCalendar(){const y=month.getFullYear(),m=month.getMonth(),start=(new Date(y,m,1).getDay()+6)%7,days=new Date(y,m+1,0).getDate();$('monthLabel').textContent=new Intl.DateTimeFormat('de-CH',{month:'long',year:'numeric'}).format(month);let html=['Mo','Di','Mi','Do','Fr','Sa','So'].map(d=>`<div class="mini" style="text-align:center">${d}</div>`).join('');for(let i=0;i<start;i++)html+='<div></div>';for(let d=1;d<=days;d++){const date=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`,closedGoals=Object.entries(db.goals).some(([k,g])=>k.startsWith(date+'|')&&g.closed),n=new Set([...(db.planned[date]||[]),...allTrainingLogs().filter(l=>l.date===date&&(l.finished||Object.values(l.sets).some(s=>s.done))).map(l=>l.plan)]).size,fix=fixedWeek[weekday(date)];html+=`<button class="day ${n?'has':''} ${date===selectedCalendarDate?'selected':''}" data-date="${date}" onclick="calendarDay('${date}')"><strong>${d}</strong><span>${fix[1]==='frei'?'Frei':fix[1]==='eis'?'Eis':'Match'}</span>${n?`<em class="day-extra">+${n}</em>`:''}${closedGoals?'<em class="day-goal">🎯</em>':''}</button>`}$('calendarGrid').innerHTML=html;const selected=selectedCalendarDate.slice(0,7)===`${y}-${String(m+1).padStart(2,'0')}`?selectedCalendarDate:`${y}-${String(m+1).padStart(2,'0')}-01`;calendarDay(selected)}
 function calendarDay(date){selectedCalendarDate=date;document.querySelectorAll('.day').forEach(b=>b.classList.toggle('selected',b.dataset.date===date));const fixed=fixedWeek[weekday(date)][0],planned=db.planned[date]||[],logs=allTrainingLogs().filter(l=>l.date===date),all=[...new Set([...planned,...logs.map(l=>l.plan)])];$('calendarDetail').innerHTML=`<div class="card"><h3>${safe(date)}</h3><p><strong>Fix:</strong> ${safe(fixed)}</p><button class="btn alt" onclick="openGoalsFor('${date}')">🎯 Tagesziele ${Object.entries(db.goals).some(([k,g])=>k.startsWith(date+'|')&&g.closed)?'ansehen ✓':'öffnen'}</button><div class="calendar-goal-summary">${Object.entries(db.goals).filter(([k,g])=>k.startsWith(date+'|')&&g.closed).map(([k,g])=>`<div class="mini">✓ ${safe(goalTypes[k.split('|')[1]]||k.split('|')[1])}: ${(g.items||[]).filter(x=>x.status==='yes').length}/${(g.items||[]).length} erreicht</div>`).join('')}</div><h3>Zusätzliche Trainings</h3>${all.length?all.map(id=>{const p=plans.find(p=>p.id===id),log=logs.find(l=>l.plan===id),archived=logs.filter(l=>l.plan===id&&l.archiveId);return `<div style="padding:10px 0;border-top:1px solid var(--edge)"><strong>${safe(p?.name||id)}</strong> ${archived.length?'✓ '+archived.length+' abgeschlossen':''}<div class="rowwrap" style="margin-top:8px"><button class="btn alt" onclick="openPlanned('${date}','${id}')">Training öffnen</button>${planned.includes(id)?`<button class="btn alt" onclick="removePlanned('${date}','${id}')">Aus Planung entfernen</button>`:''}${log&&!log.archiveId?`<button class="btn alt danger-btn" onclick="deleteWorkout('${date}','${id}')">Entwurf löschen</button>`:''}${archived.map(l=>`<button class="btn alt danger-btn" onclick="removeArchivedWorkout('${safe(l.archiveId)}')">Abgeschlossenes Training löschen</button>`).join('')}</div></div>`}).join(''):'<p class="muted">Noch kein zusätzliches Training geplant.</p>'}<h3>Training hinzufügen</h3><div class="rowwrap">${plans.filter(p=>!all.includes(p.id)).map(p=>`<button class="btn alt" onclick="planSession('${date}','${p.id}')">+ ${safe(p.name)}</button>`).join('')||'<span class="mini">Alle drei Sessions sind bereits eingetragen.</span>'}</div></div>`}
-function renderStats(){const logs=allTrainingLogs(),finished=logs.filter(l=>l.finished),checked=logs.reduce((a,l)=>a+Object.values(l.sets).filter(s=>s.done).length,0),days=new Set(logs.filter(l=>l.finished||Object.values(l.sets).some(s=>s.done)).map(l=>l.date)).size;$('statCards').innerHTML=`<div class="stat"><b>${finished.length}</b><small>Trainings fertig</small></div><div class="stat"><b>${checked}</b><small>Sätze erledigt</small></div><div class="stat"><b>${days}</b><small>Trainingstage</small></div>`;let prs={};for(const l of logs)for(const [key,s] of Object.entries(l.sets)){const kg=Number(s.kg);if(!s.done||!Number.isFinite(kg)||kg<=0)continue;const id=key.replace(/-\d+$/,'');if(!prs[id]||kg>prs[id].kg)prs[id]={kg,date:l.date}}$('prList').innerHTML=Object.entries(prs).sort((a,b)=>b[1].kg-a[1].kg).map(([id,v])=>`<div class="card flex"><div>${safe(findName(id))}<div class="mini">${safe(v.date)}</div></div><b>${v.kg} kg</b></div>`).join('')||'<p class="muted">Trage Gewichte ein und hake Sätze ab, um Bestleistungen zu sehen.</p>';$('historyList').innerHTML=logs.filter(l=>l.finished||Object.values(l.sets).some(s=>s.done)).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20).map(l=>`<div class="card flex"><span>${safe(l.date)} · ${safe(plans.find(p=>p.id===l.plan)?.name||l.plan)}</span><span class="badge">${l.finished?'✓ Fertig':'Begonnen'}</span><button class="btn alt danger-btn" onclick="${l.archiveId?`removeArchivedWorkout('${safe(l.archiveId)}')`:`deleteWorkout('${safe(l.date)}','${safe(l.plan)}');renderStats()`}">Löschen</button></div>`).join('')||'<p class="muted">Noch keine Trainings gespeichert.</p>'}
+function renderStats(){const logs=allTrainingLogs(),finished=logs.filter(l=>l.finished),checked=logs.reduce((a,l)=>a+Object.values(l.sets).filter(s=>s.done).length,0),days=new Set(logs.filter(l=>l.finished||Object.values(l.sets).some(s=>s.done)).map(l=>l.date)).size;$('statCards').innerHTML=`<div class="stat"><b>${finished.length}</b><small>Trainings fertig</small></div><div class="stat"><b>${checked}</b><small>Sätze erledigt</small></div><div class="stat"><b>${days}</b><small>Trainingstage</small></div>`;let prs={};for(const l of logs)for(const [key,s] of Object.entries(l.sets)){const kg=Number(s.kg);if(!s.done||!Number.isFinite(kg)||kg<=0)continue;const id=key.replace(/-\d+$/,'');if(!prs[id]||kg>prs[id].kg)prs[id]={kg,date:l.date}}$('prList').innerHTML=Object.entries(prs).sort((a,b)=>b[1].kg-a[1].kg).map(([id,v])=>`<div class="card flex"><div>${safe(findName(id))}<div class="mini">${safe(v.date)}</div></div><b>${v.kg} kg</b></div>`).join('')||'<p class="muted">Trage Gewichte ein und hake Sätze ab, um Bestleistungen zu sehen.</p>';$('historyList').innerHTML=logs.filter(l=>l.finished||Object.values(l.sets).some(s=>s.done)).sort((a,b)=>(b.finishedAt||b.date).localeCompare(a.finishedAt||a.date)).map(l=>`<div class="card flex"><span>${safe(l.date)} · ${safe(plans.find(p=>p.id===l.plan)?.name||l.plan)}</span><span class="badge">${l.finished?'✓ Fertig':'Begonnen'}</span><button class="btn alt danger-btn" onclick="${l.archiveId?`removeArchivedWorkout('${safe(l.archiveId)}')`:`deleteWorkout('${safe(l.date)}','${safe(l.plan)}');renderStats()`}">Löschen</button></div>`).join('')||'<p class="muted">Noch keine Trainings gespeichert.</p>'}
 function findName(id){for(const p of plans)for(const b of p.blocks)for(const e of b.items)if(e.id===id)return e.name;return id}
 function timerDraw(){if(!restExercise)return;const el=$('rest-'+restExercise);if(!el)return;el.hidden=false;const n=Math.max(0,timerLeft);el.textContent=n?'⏱ Pause: '+String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0'):'✓ Pause vorbei – nächster Satz!'}
 function startTimer(n){clearInterval(timerId);timerLeft=n;timerEnd=Date.now()+n*1000;timerId=setInterval(()=>{timerLeft=Math.max(0,Math.ceil((timerEnd-Date.now())/1000));timerDraw();if(!timerLeft){clearInterval(timerId);timerId=null}},250);timerDraw()}
 function pauseTimer(){clearInterval(timerId);timerId=null}
 function resetTimer(){pauseTimer();timerLeft=0;timerDraw()}
 function exportData(){const blob=new Blob([JSON.stringify({version:3,data:db},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='sl33-training-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
-function importData(ev){const file=ev.target.files?.[0];if(!file)return;file.text().then(t=>{let obj=JSON.parse(t);if(!obj.data?.logs||!confirm('Bestehende lokale Trainingsdaten durch die Sicherung ersetzen?'))return;db=obj.data;db.videos ||= {};db.completed ||= {};db.planned ||= {};db.goals ||= {};db.workoutArchive ||= [];db.restTimes ||= {};db.goalDrafts ||= {};save();renderHome();alert('Daten importiert')}).catch(()=>alert('Ungültige Sicherungsdatei.'));ev.target.value=''}
+function importData(ev){const file=ev.target.files?.[0];if(!file)return;file.text().then(t=>{let obj=JSON.parse(t);if(!obj.data?.logs||!confirm('Bestehende lokale Trainingsdaten durch die Sicherung ersetzen?'))return;db=normalizeData(obj.data);save();renderHome();alert('Daten importiert')}).catch(()=>alert('Ungültige Sicherungsdatei.'));ev.target.value=''}
 // Firebase Auth and private Firestore. No secrets are embedded in client code.
 const ADMIN_UID='LQzUxoUnkhVIR7gFrT74AHmNO4t2';
+const ADMIN_EMAIL='28simon06@gmail.com';
+function isAdminUser(user){return !!user&&user.uid===ADMIN_UID&&(user.email||'').toLowerCase()===ADMIN_EMAIL}
 const FIREBASE_CONFIG={apiKey:'AIzaSyDrWe116T7CCzBYw4YjyGtGdsZFDRPzVzw',authDomain:'sl33-performance.firebaseapp.com',projectId:'sl33-performance',storageBucket:'sl33-performance.firebasestorage.app',messagingSenderId:'443932352448',appId:'1:443932352448:web:8e739a9885fdc94ef6f225'};
 let isApproved=false,cloudReady=false,cloudSaving=false,cloudWritesEnabled=false,cloudTimer=null,cloudUnsubscribe=null;
 let presenceTimer=null,adminUsersUnsubscribe=null;
 function loadScript(url){return new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=url;s.onload=resolve;s.onerror=reject;document.head.appendChild(s)})}
 function setAuthMessage(message){const el=$('loginMessage');if(el)el.textContent=message}
-function showGate(view){$('loginGate').classList.toggle('hidden',view==='app');$('pendingGate').classList.toggle('hidden',view!=='pending');document.querySelector('main').classList.toggle('hidden',view!=='app');document.querySelector('header').classList.toggle('hidden',view!=='app');document.querySelector('nav.tabs').classList.toggle('hidden',view!=='app');}
+function showGate(view){$('loginGate').classList.toggle('hidden',view!=='login');$('pendingGate').classList.toggle('hidden',view!=='pending');document.querySelector('main').classList.toggle('hidden',view!=='app');document.querySelector('header').classList.toggle('hidden',view!=='app');document.querySelector('nav.tabs').classList.toggle('hidden',view!=='app');}
 async function connectFirebase(){try{
   showGate('login');setAuthMessage('Verbinde mit Firebase …');
   if(!window.firebase){await loadScript('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');await loadScript('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js');await loadScript('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js')}
   if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);fb=firebase;cloudReady=true;
   fb.auth().onAuthStateChanged(async user=>{
     if(cloudUnsubscribe){cloudUnsubscribe();cloudUnsubscribe=null}
-    stopPresence();if(adminUsersUnsubscribe){adminUsersUnsubscribe();adminUsersUnsubscribe=null}
-    fbUser=user;isApproved=false;cloudWritesEnabled=false;
+    stopPresence();clearTimeout(cloudTimer);if(adminUsersUnsubscribe){adminUsersUnsubscribe();adminUsersUnsubscribe=null}
+    fbUser=user;isApproved=false;cloudWritesEnabled=false;db=emptyData();const adminPanel=$('adminRequests');if(adminPanel)adminPanel.classList.add('hidden');
     if(!user){showGate('login');setAuthMessage('Melde dich an oder beantrage ein Konto.');return}
-    if(user.uid===ADMIN_UID){await allowAccess();return}
+    loadUserData(user);if(isAdminUser(user)){await allowAccess();return}
     showGate('pending');$('pendingEmail').textContent=user.email||'';
     cloudUnsubscribe=fb.firestore().collection('approvals').doc(user.uid).onSnapshot(async snap=>{
       if(!fbUser||fbUser.uid!==user.uid)return;
       if(snap.exists&&snap.data().approved===true){if(!isApproved)await allowAccess()}
-      else{isApproved=false;cloudWritesEnabled=false;clearTimeout(cloudTimer);stopPresence();showGate('pending');$('pendingStatus').textContent=snap.exists&&snap.data().approved===false?'Dein Antrag wurde abgelehnt.':'Dein Antrag wartet auf die Freigabe des Administrators.'}
+      else{isApproved=false;cloudWritesEnabled=false;clearTimeout(cloudTimer);stopPresence();db=emptyData();showGate('pending');$('pendingStatus').textContent=snap.exists&&snap.data().approved===false?'Dein Antrag wurde abgelehnt.':'Dein Antrag wartet auf die Freigabe des Administrators.'}
     },e=>{$('pendingStatus').textContent='Freigabestatus nicht abrufbar: '+e.message});
   });
 }catch(e){setAuthMessage('Firebase-Verbindung fehlgeschlagen: '+e.message);showGate('login')}}
 async function allowAccess(){
   isApproved=true;showGate('app');$('cloudStatus').textContent='Angemeldet: '+(fbUser.email||'');
-  await loadCloudOnce();startPresence();if(fbUser.uid===ADMIN_UID){loadRequests();watchAdminUsers()}
+  await loadCloudOnce();startPresence();if(isAdminUser(fbUser)){loadRequests();watchAdminUsers()}
 }
 async function loadCloudOnce(){
  try{const snap=await fb.firestore().collection('users').doc(fbUser.uid).get();
    if(snap.exists&&snap.data().data?.logs){const remote=snap.data().data;
      if(confirm('Cloud-Daten auf dieses Gerät laden? Achtung: Die lokalen Daten werden dadurch ersetzt. Exportiere sie vorher bei Bedarf.')){
-       db=remote;db.logs||={};db.videos||={};db.completed||={};db.planned||={};db.goals||={};db.workoutArchive||=[];db.goalDrafts||={};db.restTimes||={};localStorage.setItem(STORE,JSON.stringify(db));cloudWritesEnabled=true;$('cloudStatus').textContent='Cloud geladen · Synchronisierung aktiv';navigate('home')
+       db=normalizeData(remote);localStorage.setItem(userStore(fbUser.uid),JSON.stringify(db));cloudWritesEnabled=true;$('cloudStatus').textContent='Cloud geladen · Synchronisierung aktiv';navigate('home')
      }else{$('cloudStatus').textContent='Cloud vorhanden · lokale Daten noch nicht abgeglichen. Vor dem Überschreiben bitte exportieren.'}
-   }else{$('cloudStatus').textContent='Angemeldet · noch keine Cloud-Sicherung. Bitte zuerst deine Daten exportieren.'}
+   }else{$('cloudStatus').textContent='Angemeldet · keine Cloud-Sicherung gefunden. Synchronisierung erst nach manueller Bestätigung aktiv.'}
  }catch(e){$('cloudStatus').textContent='Cloud-Laden fehlgeschlagen: '+e.message}
 }
 async function authAction(action){
@@ -186,7 +204,7 @@ async function authAction(action){
  }catch(e){setAuthMessage('Anmeldung: '+e.message)}
 }
 async function loadRequests(){
- if(!fbUser||fbUser.uid!==ADMIN_UID)return;
+ if(!fbUser||!isAdminUser(fbUser))return;
  const box=$('adminRequests');box.classList.remove('hidden');
  try{const snap=await fb.firestore().collection('requests').get();
   const requests=snap.docs.filter(d=>d.data().status==='pending');
@@ -194,7 +212,7 @@ async function loadRequests(){
  }catch(e){$('requestList').textContent='Anfragen konnten nicht geladen werden: '+e.message}
 }
 async function reviewRequest(uid,approve){
- if(!fbUser||fbUser.uid!==ADMIN_UID)return;
+ if(!fbUser||!isAdminUser(fbUser))return;
  if(!confirm(approve?'Dieses Konto freischalten?':'Diese Anfrage ablehnen?'))return;
  try{const batch=fb.firestore().batch();batch.set(fb.firestore().collection('approvals').doc(uid),{approved:approve,reviewedAt:fb.firestore.FieldValue.serverTimestamp(),reviewedBy:fbUser.uid});batch.update(fb.firestore().collection('requests').doc(uid),{status:approve?'approved':'rejected'});await batch.commit();await loadRequests();await loadAdminUsers()}catch(e){alert('Freigabe fehlgeschlagen: '+e.message)}
 }
@@ -207,7 +225,7 @@ async function presencePing(online=true){
 function startPresence(){stopPresence();presencePing(true);presenceTimer=setInterval(()=>{if(document.visibilityState==='visible')presencePing(true)},60000)}
 async function markOffline(){stopPresence();await presencePing(false)}
 document.addEventListener('visibilitychange',()=>{if(fbUser&&isApproved)presencePing(document.visibilityState==='visible')});
-function adminOnly(){return !!fbUser&&fbUser.uid===ADMIN_UID}
+function adminOnly(){return !!fbUser&&isAdminUser(fbUser)}
 function watchAdminUsers(){if(!adminOnly())return;loadAdminUsers();if(adminUsersUnsubscribe)adminUsersUnsubscribe();adminUsersUnsubscribe=fb.firestore().collection('presence').onSnapshot(()=>loadAdminUsers(),e=>console.warn('Admin presence',e.message))}
 async function loadAdminUsers(){
  if(!adminOnly())return;

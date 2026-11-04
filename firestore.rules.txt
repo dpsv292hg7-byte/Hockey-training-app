@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function admin() { return signedIn() && request.auth.uid == 'LQzUxoUnkhVIR7gFrT74AHmNO4t2'; }
+    function admin() { return signedIn() && request.auth.uid == 'LQzUxoUnkhVIR7gFrT74AHmNO4t2' && request.auth.token.email == '28simon06@gmail.com'; }
     function approved() {
       return admin() || (signedIn()
         && exists(/databases/$(database)/documents/approvals/$(request.auth.uid))
