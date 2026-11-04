@@ -1,0 +1,7 @@
+SL33 Player Development V7
+
+Neue Funktionen: Match-Coach, Tagescheck, Wochenfokus, Trainerfeedback und HTTPS-Video-Links, Leistungstests, Karriere-Roadmap, Monatsrueckblick.
+
+Installation: Zuerst JSON-Backup in der alten App exportieren. Danach die Dateien auf GitHub aktualisieren. Firestore-Regeln und bestehendes Logo unveraendert.
+
+Hinweis: Kein medizinischer Coach. Kein automatischer KI-Chat, keine Videoanalyse durch KI. Tests mit echtem Firebase-Login sind noch erforderlich.
