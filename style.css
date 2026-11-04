@@ -99,3 +99,30 @@ input:disabled,textarea:disabled,button:disabled{opacity:.65;cursor:not-allowed}
 .goal-entry,.coach-chat,.coach-suggestion {margin-bottom:12px;}
 .danger-btn {white-space:normal;}
 @media(max-width:540px){.card .btn {min-height:42px;} .goal-actions{gap:7px;} .goal-actions .btn{font-size:.86rem;} }
+
+/* V6: consistent touch targets, readability, keyboard and safe areas */
+:root{color-scheme:dark;--focus:#8ec5ff}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:18px}
+body{overflow-x:hidden;line-height:1.5}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer;touch-action:manipulation}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+button:disabled{cursor:not-allowed}
+.card,.goal-item,.set-card{overflow-wrap:anywhere}
+.card{box-shadow:0 6px 22px rgba(0,0,0,.10)}
+.card h2,.card h3{line-height:1.25}
+.btn,.tabs button,.check{min-height:44px}
+.tabs{padding-bottom:max(6px,env(safe-area-inset-bottom));z-index:20}
+.tabs button{line-height:1.25}
+.set-card{min-width:0}
+.set-card input{max-width:100%}
+.set-card .check{min-width:44px}
+.set-card-title{gap:8px}
+#workoutBar{transition:width .22s ease}
+#workoutPercent{font-variant-numeric:tabular-nums}
+.day{min-width:0;overflow:hidden}
+.sl33-toast{position:fixed;bottom:calc(88px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,14px);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;background:#16365d;border:1px solid #619ce5;color:#f0f7ff;padding:12px 18px;border-radius:12px;z-index:1000;max-width:min(92vw,420px);box-shadow:0 12px 35px #0008;text-align:center;font-weight:650}
+.sl33-toast.visible{opacity:1;transform:translate(-50%,0)}
+@media(max-width:480px){.rowwrap{gap:8px}.set-card{padding:10px}.card{padding:15px}.tabs button{font-size:10px;min-height:52px}.card .btn{min-height:44px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}

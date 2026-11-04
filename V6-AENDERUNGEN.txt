@@ -1,0 +1,11 @@
+SL33 Komfort V6 – UX- und Stabilitaetsupdate
+- Grössere Touch-Flächen, sichtbarer Tastaturfokus, bessere Abstände und Safe-Area für iPad/iPhone
+- Rückmeldung nach Abschluss, Zurücksetzen und Löschen
+- Fortschritt abgeschlossener Einheiten im Verlauf
+- Entwürfe mit nur eingetragenen Gewichten zählen als offen
+- Fehlerhafte Trainingssatz-Zählung beim Abschluss korrigiert
+- Backup-Import prüft Format und warnt vor Überschreiben
+- Gewichtseingabe validiert
+- Verbesserte Anzeige von Datumswerten
+- Keine Änderung an Logo, Übungen, Admin-E-Mail oder Firebase-Regeln
+- Noch nicht live auf GitHub; vor Installation Backup erstellen
